@@ -5,6 +5,11 @@ import { getGame } from '../games/registry';
 import { NavBar } from './NavBar';
 import styles from './Cabinet.module.scss';
 
+// Real photos of the actual Dog House (Christchurch), not committed to git —
+// see public/branding/README.md. One is picked at random per page load and
+// shown full-page, faded behind the cabinet.
+const BACKDROP_IMAGES = ['/branding/doghouse-1.jpg', '/branding/doghouse-2.jpg', '/branding/doghouse-3.jpg'];
+
 /**
  * Decorative 1980s-arcade-cabinet chrome around the real site. The neon
  * marquee doubles as the home link and hosts the site nav, so the title
@@ -28,8 +33,13 @@ export function Cabinet({ children }: { children: ReactNode }) {
   const [muted, setMuted] = useState(isMuted());
   useEffect(() => subscribeMuted(setMuted), []);
 
+  // Picked once per mount (Cabinet wraps every route and doesn't remount on
+  // navigation, so this is effectively "once per page load," not per page).
+  const [backdrop] = useState(() => BACKDROP_IMAGES[Math.floor(Math.random() * BACKDROP_IMAGES.length)]);
+
   return (
     <div className={styles.root}>
+      <div className={styles.backdrop} style={{ backgroundImage: `url(${backdrop})` }} aria-hidden="true" />
       <div className={styles.cabinet}>
         <div className={styles.marquee}>
           <div className={styles.marqueeRow}>
