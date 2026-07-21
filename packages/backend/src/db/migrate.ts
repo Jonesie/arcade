@@ -37,10 +37,16 @@ async function migrate() {
     console.log('Created Scores table');
   }
 
-  const ticTacToe = await db('Games').where({ Slug: 'tic-tac-toe' }).first();
-  if (!ticTacToe) {
-    await db('Games').insert({ Slug: 'tic-tac-toe', Name: 'Tic-Tac-Toe' });
-    console.log('Seeded tic-tac-toe game row');
+  const seedGames = [
+    { Slug: 'tic-tac-toe', Name: 'Tic-Tac-Toe' },
+    { Slug: 'space-invaders', Name: 'Space Invaders' },
+  ];
+  for (const game of seedGames) {
+    const existing = await db('Games').where({ Slug: game.Slug }).first();
+    if (!existing) {
+      await db('Games').insert(game);
+      console.log(`Seeded ${game.Slug} game row`);
+    }
   }
 
   console.log('Migration complete');
