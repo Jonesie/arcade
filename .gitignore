@@ -22,3 +22,10 @@ coverage/
 # Local agent tooling config, not relevant to other contributors
 .claude/
 
+# Real photos tied to this site's identity (e.g. the Dog House storefront
+# background) — this repo is public, and we don't necessarily hold
+# redistribution rights, so these stay local/server-only. See
+# packages/frontend/public/branding/README.md.
+packages/frontend/public/branding/*
+!packages/frontend/public/branding/README.md
+
