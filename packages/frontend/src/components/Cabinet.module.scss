@@ -1,0 +1,311 @@
+.root {
+  --cab-black: #15120d;
+  --cab-black-2: #1d1810;
+  --cab-panel: #241e15;
+  --chrome-hi: #d7dee4;
+  --chrome-lo: #6b7580;
+  --neon-red: #ff2a1f;
+  --neon-red-soft: #ff5a3d;
+  --coin-gold: #ffc94a;
+
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 60% 30% at 50% 0%, rgba(255, 42, 31, 0.09), transparent 70%),
+    #07060a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem 3rem;
+}
+
+.cabinet {
+  width: min(720px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.marquee {
+  background: linear-gradient(180deg, #2a2016, var(--cab-black-2));
+  border: 1px solid #443722;
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
+  padding: 0.9rem 1rem 1rem;
+  text-align: center;
+}
+
+.marqueeThe {
+  font-weight: 700;
+  font-size: clamp(12px, 2.4vw, 15px);
+  letter-spacing: 0.55em;
+  text-transform: uppercase;
+  color: #fff0ee;
+  text-shadow:
+    0 0 3px #fff,
+    0 0 8px var(--neon-red),
+    0 0 16px var(--neon-red);
+  margin: 0 0 0.2rem;
+  // Optically re-center under the wider word below despite the extreme
+  // letter-spacing pushing its last character out past the block edge.
+  padding-left: 0.55em;
+}
+
+.marqueeText {
+  font-weight: 700;
+  font-size: clamp(28px, 6.5vw, 40px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff5f2;
+  text-shadow:
+    0 0 4px #fff,
+    0 0 10px var(--neon-red),
+    0 0 22px var(--neon-red),
+    0 0 44px rgba(255, 42, 31, 0.65),
+    0 0 3px var(--neon-red-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .marquee {
+    animation: tubeHum 3.2s ease-in-out infinite;
+  }
+}
+
+@keyframes tubeHum {
+  0%,
+  96%,
+  100% {
+    opacity: 1;
+  }
+  97% {
+    opacity: 0.82;
+  }
+  98% {
+    opacity: 1;
+  }
+}
+
+.bezel {
+  background: var(--cab-black);
+  border: 1px solid #2a241a;
+  border-top: none;
+  padding: 0.85rem;
+  position: relative;
+}
+
+.screw {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--chrome-hi), var(--chrome-lo) 70%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 6px;
+    height: 1px;
+    background: #3a3a3a;
+    transform: rotate(38deg);
+  }
+}
+.tl {
+  top: 10px;
+  left: 10px;
+}
+.tr {
+  top: 10px;
+  right: 10px;
+}
+.bl {
+  bottom: 10px;
+  left: 10px;
+}
+.br {
+  bottom: 10px;
+  right: 10px;
+}
+
+.screen {
+  position: relative;
+  background: var(--color-bg);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 2px #000,
+    inset 0 0 40px rgba(124, 108, 240, 0.28),
+    0 0 24px rgba(124, 108, 240, 0.2);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.14) 0px,
+      rgba(0, 0, 0, 0.14) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.controlPanel {
+  background: linear-gradient(180deg, var(--cab-panel), var(--cab-black-2));
+  border: 1px solid #382f20;
+  border-top: 2px solid #4a3d26;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.joystick {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3a3428, #100e0a 75%);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px #4a4232;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.joystickBall {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff8a6b, #c62c1f 75%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.buttons {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.arcadeBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  box-shadow:
+    0 2px 3px rgba(0, 0, 0, 0.6),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.35),
+    inset 0 2px 3px rgba(255, 255, 255, 0.35);
+}
+.red {
+  background: radial-gradient(circle at 38% 32%, #ff6b6b, #b3231f);
+}
+.yellow {
+  background: radial-gradient(circle at 38% 32%, #ffe07a, #d99a12);
+}
+.blue {
+  background: radial-gradient(circle at 38% 32%, #7fd0ff, #1a76b8);
+}
+
+.coinUnit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.coinSlot {
+  width: 30px;
+  height: 22px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #0c0a08, #211b12);
+  box-shadow:
+    inset 0 0 0 1px #4a3d26,
+    0 1px 2px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coinSlotLine {
+  width: 14px;
+  height: 3px;
+  border-radius: 1px;
+  background: #000;
+  box-shadow: inset 0 0 0 1px rgba(255, 201, 74, 0.25);
+}
+
+.coinLabel {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--coin-gold);
+  text-shadow: 0 0 6px rgba(255, 201, 74, 0.55);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .coinLabel {
+    animation: coinBlink 1.6s steps(1, end) infinite;
+  }
+}
+
+@keyframes coinBlink {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.cabinetBase {
+  background: var(--cab-black);
+  border: 1px solid #2a241a;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 0.6rem 1rem 0.9rem;
+  display: flex;
+  justify-content: center;
+}
+
+.plate {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--chrome-lo);
+  border: 1px solid #3a3327;
+  padding: 3px 10px;
+  border-radius: 3px;
+}
+
+// Below this width the physical cabinet chrome would eat too much of a
+// small screen for what it adds — drop it and let the CRT screen (still
+// scanlined) fill the viewport so the site stays fully usable on a phone.
+@media (max-width: 640px) {
+  .root {
+    padding: 0;
+  }
+  .marquee,
+  .controlPanel,
+  .cabinetBase {
+    display: none;
+  }
+  .bezel {
+    border: none;
+    padding: 0;
+  }
+  .screen {
+    border-radius: 0;
+    box-shadow: inset 0 0 30px rgba(124, 108, 240, 0.2);
+  }
+}

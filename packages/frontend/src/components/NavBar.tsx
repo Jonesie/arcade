@@ -8,7 +8,7 @@ export function NavBar() {
   return (
     <header className={styles.nav}>
       <Link to="/" className={styles.brand}>
-        Arcade
+        The Dog House
       </Link>
       <nav className={styles.links}>
         <Link to="/leaderboard">Leaderboard</Link>
