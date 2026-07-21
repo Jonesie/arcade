@@ -8,8 +8,8 @@ import styles from './Cabinet.module.scss';
  * marquee doubles as the home link and hosts the site nav, so the title
  * isn't repeated inside the screen. `children` (the routed page) render
  * inside the CRT screen unchanged. The rest of the cabinet (bezel screws,
- * joystick, buttons, coin slot, base plate) is purely decorative
- * (aria-hidden, pointer-events: none).
+ * joystick, buttons, coin slot) is purely decorative (aria-hidden,
+ * pointer-events: none).
  */
 export function Cabinet({ children }: { children: ReactNode }) {
   return (
@@ -47,19 +47,15 @@ export function Cabinet({ children }: { children: ReactNode }) {
             <div className={`${styles.arcadeBtn} ${styles.yellow}`} />
             <div className={`${styles.arcadeBtn} ${styles.blue}`} />
           </div>
+        </div>
+
+        <div className={styles.cabinetBase} aria-hidden="true">
           <div className={styles.coinUnit}>
             <div className={styles.coinSlot}>
               <div className={styles.coinSlotLine} />
             </div>
             <span className={styles.coinLabel}>Insert coin</span>
           </div>
-        </div>
-
-        <div className={styles.cabinetBase} aria-hidden="true">
-          <div className={styles.coinDoor}>
-            <div className={styles.coinDoorDial} />
-          </div>
-          <span className={styles.plate}>Player 1</span>
         </div>
       </div>
     </div>
