@@ -14,6 +14,11 @@ import { scoresRouter } from './routes/scores.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
+// Deployed behind exactly one reverse proxy (nginx) — trust its
+// X-Forwarded-For so rate-limiting and logging see the real client IP
+// instead of the proxy's.
+app.set('trust proxy', 1);
+
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(express.json({ limit: '100kb' }));

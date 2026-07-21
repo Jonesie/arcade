@@ -49,6 +49,12 @@ Traefik, etc.) in front to terminate TLS and forward to the container's
 port. The app trusts `Secure`/cookie behavior based on `NODE_ENV=production`,
 so make sure that's set once you're serving over HTTPS.
 
+The app also calls `app.set('trust proxy', 1)`, assuming exactly one reverse
+proxy hop in front of it (see `packages/backend/src/index.ts`). This is what
+lets rate-limiting key on the real client IP from `X-Forwarded-For` instead
+of the proxy's own address. If you put more than one hop in front of it
+(e.g. a CDN in front of the reverse proxy), adjust that setting accordingly.
+
 ## Database
 
 The app expects a SQL Server database it has `db_owner`-equivalent access to
