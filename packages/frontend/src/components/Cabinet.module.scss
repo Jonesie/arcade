@@ -163,6 +163,18 @@
   }
 }
 
+// The current game's title, rendered by Cabinet (not the page itself) so it
+// can sit outside .screenContent — on the fixed-height desktop layout that
+// keeps it visible while the actual game/leaderboard content scrolls
+// underneath, instead of scrolling away with it.
+.screenHeader {
+  margin: 0;
+  padding: 0.75rem 0.9rem 0.6rem;
+  font-size: 1.2rem;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+}
+
 .controlPanel {
   background: linear-gradient(180deg, var(--cab-panel), var(--cab-black-2));
   border: 1px solid #382f20;
@@ -232,8 +244,8 @@
 // A chunky black beveled door with a glowing red acceptor window, like a
 // real coin-door insert — not just a plain dark slot.
 .coinSlot {
-  width: 52px;
-  height: 52px;
+  width: 40px;
+  height: 40px;
   border-radius: 6px;
   background: linear-gradient(145deg, #322d27, #0c0a08);
   box-shadow:
@@ -243,7 +255,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 7px;
+  padding: 6px;
 }
 
 .coinSlotWindow {
@@ -294,8 +306,10 @@
   }
 }
 
-// The lower cabinet body — real machines are mostly this: a tall wood-look
-// door below the control panel, with the coin mechanism set into it.
+// The lower cabinet body — just tall enough to hold the coin door, not a
+// full-height wood-look door. Sized to its content (see the flex: 0 0 auto
+// override below) rather than a viewport-proportional slice, which used to
+// eat too much of the screen and squeeze .screenContent's scroll area.
 .cabinetBase {
   background:
     repeating-linear-gradient(
@@ -309,12 +323,11 @@
   border: 1px solid #241708;
   border-top: none;
   border-radius: 0 0 14px 14px;
-  padding: 1.25rem 1rem;
+  padding: 0.55rem 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.85rem;
 }
 
 // A real cabinet is a fixed-height standee, not a box that grows with
@@ -337,7 +350,7 @@
     flex: 0 0 auto;
   }
   .bezel {
-    flex: 3 1 0;
+    flex: 1 1 auto;
     min-height: 0;
     display: flex;
     flex-direction: column;
@@ -348,6 +361,9 @@
     display: flex;
     flex-direction: column;
   }
+  .screenHeader {
+    flex: 0 0 auto;
+  }
   .screenContent {
     flex: 1 1 auto;
     min-height: 0;
@@ -357,8 +373,7 @@
     flex: 0 0 auto;
   }
   .cabinetBase {
-    flex: 2 1 0;
-    min-height: 0;
+    flex: 0 0 auto;
   }
 }
 

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { getGame } from '../games/registry';
 import { NavBar } from './NavBar';
 import styles from './Cabinet.module.scss';
 
@@ -7,11 +8,20 @@ import styles from './Cabinet.module.scss';
  * Decorative 1980s-arcade-cabinet chrome around the real site. The neon
  * marquee doubles as the home link and hosts the site nav, so the title
  * isn't repeated inside the screen. `children` (the routed page) render
- * inside the CRT screen unchanged. The rest of the cabinet (bezel screws,
- * joystick, buttons, coin slot) is purely decorative (aria-hidden,
- * pointer-events: none).
+ * inside the CRT screen unchanged, except the per-game title: Cabinet reads
+ * the current game from the route (useLocation, not useParams — this
+ * renders above <Routes>, outside any Route's matched subtree, so
+ * useParams wouldn't see :slug here) and renders it in a fixed header
+ * above .screenContent, so it stays put on the fixed-height desktop layout
+ * instead of scrolling away with the game itself. The rest of the cabinet
+ * (bezel screws, joystick, buttons, coin slot) is purely decorative
+ * (aria-hidden, pointer-events: none).
  */
 export function Cabinet({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  const gameSlug = location.pathname.match(/^\/games\/([^/]+)/)?.[1];
+  const game = gameSlug ? getGame(gameSlug) : undefined;
+
   return (
     <div className={styles.root}>
       <div className={styles.cabinet}>
@@ -38,6 +48,7 @@ export function Cabinet({ children }: { children: ReactNode }) {
           <div className={`${styles.screw} ${styles.bl}`} aria-hidden="true" />
           <div className={`${styles.screw} ${styles.br}`} aria-hidden="true" />
           <div className={styles.screen}>
+            {game && <h1 className={styles.screenHeader}>{game.name}</h1>}
             <div className={styles.screenContent}>{children}</div>
           </div>
         </div>

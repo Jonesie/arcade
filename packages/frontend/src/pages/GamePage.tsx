@@ -10,10 +10,5 @@ export function GamePage() {
   }
 
   const GameComponent = game.component;
-  return (
-    <div>
-      <h1>{game.name}</h1>
-      <GameComponent />
-    </div>
-  );
+  return <GameComponent />;
 }
