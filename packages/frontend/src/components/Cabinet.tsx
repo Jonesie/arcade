@@ -56,7 +56,9 @@ export function Cabinet({ children }: { children: ReactNode }) {
         <div className={styles.cabinetBase} aria-hidden="true">
           <div className={styles.coinUnit}>
             <div className={styles.coinSlot}>
-              <div className={styles.coinSlotLine} />
+              <div className={styles.coinSlotWindow}>
+                <div className={styles.coinSlotLine} />
+              </div>
             </div>
             <span className={styles.coinLabel}>Insert coin</span>
           </div>
