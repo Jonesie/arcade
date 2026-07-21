@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../../api/client';
 import { createInitialState, HEIGHT, update, WIDTH, type GameInput, type GameState } from './engine';
 import { render } from './render';
-import { ensureAudio, isSoundEnabled, setSoundEnabled, sfx } from './sound';
+import { ensureAudio, isSoundEnabled, setSoundEnabled, sfx, startMusic, stopMusic } from './sound';
 import styles from './Galaga.module.scss';
 
 type Status = 'ready' | 'playing' | 'gameover';
@@ -82,7 +82,10 @@ export function Galaga() {
     }
 
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      stopMusic();
+    };
   }, [status]);
 
   useEffect(() => {
@@ -114,6 +117,7 @@ export function Galaga() {
 
   const startGame = useCallback(() => {
     ensureAudio();
+    startMusic();
     stateRef.current = createInitialState();
     elapsedMsRef.current = 0;
     inputRef.current = { left: false, right: false, fire: false };

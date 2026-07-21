@@ -68,3 +68,35 @@ export const sfx = {
   waveClear: () => tone(660, 0.3, 'triangle', 0.16),
   gameOver: () => tone(110, 0.6, 'sawtooth', 0.2),
 };
+
+// A short looping background arpeggio — an original chiptune-style riff in
+// the spirit of the arcade, not a reproduction of the real Galaga
+// soundtrack (which is copyrighted). Runs off a self-rescheduling timeout
+// rather than Web Audio's own clock, which is precise enough at this tempo
+// and much simpler than a lookahead scheduler. `tone()` already no-ops
+// while muted, so the scheduler just keeps ticking silently — toggling
+// sound back on resumes immediately without restarting the loop.
+const MUSIC_NOTES = [196, 233, 262, 233, 196, 175, 196, 233, 262, 311, 349, 311, 262, 233, 220, 196];
+const MUSIC_STEP_S = 0.15;
+
+let musicTimer: ReturnType<typeof setTimeout> | null = null;
+let musicStep = 0;
+
+function scheduleMusicStep() {
+  tone(MUSIC_NOTES[musicStep % MUSIC_NOTES.length], MUSIC_STEP_S * 0.85, 'square', 0.045);
+  musicStep += 1;
+  musicTimer = setTimeout(scheduleMusicStep, MUSIC_STEP_S * 1000);
+}
+
+export function startMusic(): void {
+  if (musicTimer) return;
+  musicStep = 0;
+  scheduleMusicStep();
+}
+
+export function stopMusic(): void {
+  if (musicTimer) {
+    clearTimeout(musicTimer);
+    musicTimer = null;
+  }
+}
