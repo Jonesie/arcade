@@ -1,0 +1,21 @@
+# Standalone local run: builds the image and joins the same external Docker
+# network the (separately managed) MSSQL container lives on, so DB_SERVER=sql
+# resolves exactly like it will in production. See doc/deployment.md.
+services:
+  arcade:
+    build: .
+    image: arcade:local
+    env_file: .env
+    environment:
+      # Override whatever DB_SERVER is set to for bare host-mode dev in .env —
+      # inside this container the SQL Server is only reachable via its
+      # home_default network alias, not "localhost".
+      DB_SERVER: sql
+    ports:
+      - '3000:3000'
+    networks:
+      - home_default
+
+networks:
+  home_default:
+    external: true

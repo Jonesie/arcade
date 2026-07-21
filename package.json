@@ -1,0 +1,33 @@
+{
+  "name": "arcade",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w @arcade/shared",
+    "build": "npm run build:shared && npm run build -w @arcade/frontend && npm run build -w @arcade/backend",
+    "dev:backend": "npm run build:shared && npm run dev -w @arcade/backend",
+    "dev:frontend": "npm run dev -w @arcade/frontend",
+    "migrate": "npm run build:shared && npm run migrate -w @arcade/backend",
+    "start": "npm run start -w @arcade/backend",
+    "typecheck": "npm run build:shared && npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "eslint": "^9.13.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.13",
+    "globals": "^15.11.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.10.0"
+  }
+}
