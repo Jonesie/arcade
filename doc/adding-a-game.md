@@ -46,7 +46,10 @@ Style it with a co-located `*.module.scss` file.
 
 ## 6. Register it — `packages/frontend/src/games/registry.ts`
 
-Add one entry: `{ slug, name, description, component }`. That's the only
-change needed in the shell — the home page's game grid, the `/games/:slug`
-route, and the leaderboard page's per-game tab all read from this registry
-automatically.
+Add one entry: `{ slug, name, description, icon, component }`. `icon` is a
+small component rendered on the home page tile — for tic-tac-toe it's a
+plain inline SVG (`TicTacToeIcon.tsx`) using the site's existing CSS color
+variables, not an image asset; follow that pattern unless a game genuinely
+needs a raster image. That's the only change needed in the shell — the home
+page's game grid, the `/games/:slug` route, and the leaderboard page's
+per-game tab all read from this registry automatically.
