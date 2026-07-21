@@ -4,18 +4,13 @@
  * reproducing the original game's actual copyrighted sound recordings.
  * `AudioContext` needs a user gesture before it can play; `ensureAudio()` is
  * called from the "Start"/"Play again" button handlers, which counts.
+ *
+ * Mute is a site-wide preference (a cabinet button, not part of this
+ * game's own HUD) — see ../../audio/muteState.
  */
+import { isMuted } from '../../audio/muteState';
 
 let audioCtx: AudioContext | null = null;
-let enabled = true;
-
-export function setSoundEnabled(value: boolean): void {
-  enabled = value;
-}
-
-export function isSoundEnabled(): boolean {
-  return enabled;
-}
 
 export function ensureAudio(): void {
   if (!audioCtx) {
@@ -27,7 +22,7 @@ export function ensureAudio(): void {
 }
 
 function tone(freq: number, duration: number, type: OscillatorType, gain: number) {
-  if (!enabled || !audioCtx) return;
+  if (isMuted() || !audioCtx) return;
   const osc = audioCtx.createOscillator();
   const g = audioCtx.createGain();
   osc.type = type;
@@ -42,7 +37,7 @@ function tone(freq: number, duration: number, type: OscillatorType, gain: number
 }
 
 function noise(duration: number, gain: number) {
-  if (!enabled || !audioCtx) return;
+  if (isMuted() || !audioCtx) return;
   const ctx = audioCtx;
   const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);

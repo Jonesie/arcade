@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../../api/client';
 import { createInitialState, HEIGHT, update, WIDTH, type GameInput, type GameState } from './engine';
 import { render } from './render';
-import { ensureAudio, isSoundEnabled, setSoundEnabled, sfx } from './sound';
+import { ensureAudio, sfx } from './sound';
 import styles from './SpaceInvaders.module.scss';
 
 type Status = 'ready' | 'playing' | 'gameover';
@@ -24,7 +24,6 @@ export function SpaceInvaders() {
   const [score, setScore] = useState(0);
   const [wave, setWave] = useState(1);
   const [lives, setLives] = useState(3);
-  const [muted, setMuted] = useState(!isSoundEnabled());
   const [finalScore, setFinalScore] = useState<{ score: number; elapsedMs: number } | null>(null);
 
   const submitMutation = useMutation({
@@ -128,12 +127,6 @@ export function SpaceInvaders() {
     setStatus('playing');
   }, [submitMutation]);
 
-  function toggleMute() {
-    const next = !muted;
-    setMuted(next);
-    setSoundEnabled(!next);
-  }
-
   function press(key: keyof GameInput, value: boolean) {
     inputRef.current[key] = value;
   }
@@ -144,9 +137,6 @@ export function SpaceInvaders() {
         <span>Score: {score}</span>
         <span>Wave: {wave}</span>
         <span>Lives: {lives}</span>
-        <button type="button" onClick={toggleMute} aria-pressed={muted}>
-          {muted ? 'Sound off' : 'Sound on'}
-        </button>
       </div>
 
       <div className={styles.screenWrap}>

@@ -3,19 +3,12 @@
  * space-invaders/sound.ts: no binary audio assets, no risk of reproducing
  * the original game's actual recordings. Each game keeps its own small
  * sound module rather than sharing one, so games stay self-contained (see
- * doc/adding-a-game.md).
+ * doc/adding-a-game.md) — except mute itself, which is a site-wide cabinet
+ * button rather than part of any one game's HUD (see ../../audio/muteState).
  */
+import { isMuted } from '../../audio/muteState';
 
 let audioCtx: AudioContext | null = null;
-let enabled = true;
-
-export function setSoundEnabled(value: boolean): void {
-  enabled = value;
-}
-
-export function isSoundEnabled(): boolean {
-  return enabled;
-}
 
 export function ensureAudio(): void {
   if (!audioCtx) {
@@ -27,7 +20,7 @@ export function ensureAudio(): void {
 }
 
 function tone(freq: number, duration: number, type: OscillatorType, gain: number) {
-  if (!enabled || !audioCtx) return;
+  if (isMuted() || !audioCtx) return;
   const osc = audioCtx.createOscillator();
   const g = audioCtx.createGain();
   osc.type = type;
@@ -42,7 +35,7 @@ function tone(freq: number, duration: number, type: OscillatorType, gain: number
 }
 
 function noise(duration: number, gain: number) {
-  if (!enabled || !audioCtx) return;
+  if (isMuted() || !audioCtx) return;
   const ctx = audioCtx;
   const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);

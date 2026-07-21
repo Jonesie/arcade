@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { isMuted, subscribeMuted, toggleMuted } from '../audio/muteState';
 import { getGame } from '../games/registry';
 import { NavBar } from './NavBar';
 import styles from './Cabinet.module.scss';
@@ -13,14 +14,19 @@ import styles from './Cabinet.module.scss';
  * renders above <Routes>, outside any Route's matched subtree, so
  * useParams wouldn't see :slug here) and renders it in a fixed header
  * above .screenContent, so it stays put on the fixed-height desktop layout
- * instead of scrolling away with the game itself. The rest of the cabinet
- * (bezel screws, joystick, buttons, coin slot) is purely decorative
- * (aria-hidden, pointer-events: none).
+ * instead of scrolling away with the game itself. Most of the rest of the
+ * cabinet (bezel screws, joystick, coin slot) is purely decorative
+ * (aria-hidden, pointer-events: none) — except one control-panel button,
+ * which is a real site-wide mute toggle (see ../audio/muteState) since it's
+ * persistent chrome shown on every page, not owned by any one game's HUD.
  */
 export function Cabinet({ children }: { children: ReactNode }) {
   const location = useLocation();
   const gameSlug = location.pathname.match(/^\/games\/([^/]+)/)?.[1];
   const game = gameSlug ? getGame(gameSlug) : undefined;
+
+  const [muted, setMuted] = useState(isMuted());
+  useEffect(() => subscribeMuted(setMuted), []);
 
   return (
     <div className={styles.root}>
@@ -58,9 +64,18 @@ export function Cabinet({ children }: { children: ReactNode }) {
             <div className={styles.joystickBall} />
           </div>
           <div className={styles.buttons}>
-            <div className={`${styles.arcadeBtn} ${styles.red}`} />
-            <div className={`${styles.arcadeBtn} ${styles.yellow}`} />
-            <div className={`${styles.arcadeBtn} ${styles.blue}`} />
+            <div className={`${styles.arcadeBtn} ${styles.red}`} aria-hidden="true" />
+            <div className={`${styles.arcadeBtn} ${styles.yellow}`} aria-hidden="true" />
+            <button
+              type="button"
+              className={`${styles.arcadeBtn} ${styles.blue} ${styles.musicBtn}`}
+              onClick={() => toggleMuted()}
+              aria-pressed={!muted}
+              aria-label={muted ? 'Turn music on' : 'Turn music off'}
+              title={muted ? 'Turn music on' : 'Turn music off'}
+            >
+              ♪
+            </button>
           </div>
         </div>
 
