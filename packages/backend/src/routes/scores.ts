@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { db } from '../db/knex.js';
+import { validateGalagaSubmission } from '../games/galaga.js';
 import { validateSpaceInvadersSubmission } from '../games/spaceInvaders.js';
 import { validateTicTacToeSubmission } from '../games/ticTacToe.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -77,6 +78,31 @@ scoresRouter.post('/space-invaders/scores', requireAuth, async (req, res) => {
   }
 
   await insertScore(req.user!.id, 'space-invaders', parsed.data.score, verdict.points, {
+    score: parsed.data.score,
+  });
+
+  res.status(201).json({ score: parsed.data.score, points: verdict.points });
+});
+
+const galagaSubmissionSchema = z.object({
+  score: z.number().int().min(0),
+  elapsedMs: z.number().min(0),
+});
+
+scoresRouter.post('/galaga/scores', requireAuth, async (req, res) => {
+  const parsed = galagaSubmissionSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid submission' });
+    return;
+  }
+
+  const verdict = validateGalagaSubmission(parsed.data);
+  if (!verdict.valid) {
+    res.status(400).json({ error: verdict.reason });
+    return;
+  }
+
+  await insertScore(req.user!.id, 'galaga', parsed.data.score, verdict.points, {
     score: parsed.data.score,
   });
 

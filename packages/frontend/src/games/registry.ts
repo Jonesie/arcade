@@ -1,9 +1,11 @@
 import type { ComponentType } from 'react';
+import { Galaga } from './galaga/Galaga';
+import { GalagaIcon } from './galaga/GalagaIcon';
 import { SpaceInvaders } from './space-invaders/SpaceInvaders';
 import { SpaceInvadersIcon } from './space-invaders/SpaceInvadersIcon';
 import { TicTacToe } from './tic-tac-toe/TicTacToe';
 import { TicTacToeIcon } from './tic-tac-toe/TicTacToeIcon';
-import { DefenderIcon, FroggerIcon, GalagaIcon } from './upcoming/icons';
+import { DefenderIcon, FroggerIcon } from './upcoming/icons';
 
 export interface GameDefinition {
   slug: string;
@@ -41,6 +43,13 @@ export const games: GameDefinition[] = [
     icon: SpaceInvadersIcon,
     component: SpaceInvaders,
   },
+  {
+    slug: 'galaga',
+    name: 'Galaga',
+    description: 'Formations fly in, peel off, and dive-bomb you. Shoot them before they shoot back.',
+    icon: GalagaIcon,
+    component: Galaga,
+  },
 ];
 
 export function getGame(slug: string): GameDefinition | undefined {
@@ -58,12 +67,6 @@ export const upcomingGames: UpcomingGame[] = [
     name: 'Frogger',
     description: 'Hop across traffic and a river without becoming roadkill.',
     icon: FroggerIcon,
-  },
-  {
-    slug: 'galaga',
-    name: 'Galaga',
-    description: 'Diving formations, one bug at a time.',
-    icon: GalagaIcon,
   },
   {
     slug: 'defender',
