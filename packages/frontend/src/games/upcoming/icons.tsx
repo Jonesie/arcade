@@ -1,0 +1,68 @@
+/**
+ * Simple inline-SVG icons for games that are on the roadmap but not built
+ * yet (see the "game" issues on GitHub). Stylized silhouettes in the site's
+ * existing accent colors, not attempts at reproducing the original sprite
+ * art. Once a game is actually implemented, give it its own icon alongside
+ * its component (see TicTacToeIcon.tsx) and drop its entry here.
+ */
+
+export function FroggerIcon() {
+  return (
+    <svg viewBox="0 0 60 60" width="48" height="48" aria-hidden="true">
+      <g fill="var(--color-success)">
+        <ellipse cx="30" cy="34" rx="16" ry="13" />
+        <circle cx="20" cy="18" r="6" />
+        <circle cx="40" cy="18" r="6" />
+        <ellipse cx="10" cy="42" rx="5" ry="3" />
+        <ellipse cx="50" cy="42" rx="5" ry="3" />
+        <ellipse cx="16" cy="52" rx="5" ry="3" />
+        <ellipse cx="44" cy="52" rx="5" ry="3" />
+      </g>
+      <circle cx="20" cy="17" r="2.4" fill="var(--color-bg)" />
+      <circle cx="40" cy="17" r="2.4" fill="var(--color-bg)" />
+    </svg>
+  );
+}
+
+const INVADER_ROWS = ['.XX.XX.', 'XXXXXXX', 'XX.X.XX', 'XXXXXXX', 'X.X.X.X'];
+
+export function SpaceInvadersIcon() {
+  const cell = 8;
+  const offsetX = 2;
+  const offsetY = 10;
+  return (
+    <svg viewBox="0 0 60 60" width="48" height="48" aria-hidden="true">
+      <g fill="var(--color-primary)">
+        {INVADER_ROWS.flatMap((row, y) =>
+          row
+            .split('')
+            .map((c, x) =>
+              c === 'X' ? (
+                <rect key={`${x}-${y}`} x={offsetX + x * cell} y={offsetY + y * cell} width={cell} height={cell} />
+              ) : null,
+            ),
+        )}
+      </g>
+    </svg>
+  );
+}
+
+export function GalagaIcon() {
+  return (
+    <svg viewBox="0 0 60 60" width="48" height="48" aria-hidden="true">
+      <g fill="var(--color-danger)">
+        <path d="M30 6 L36 44 L30 38 L24 44 Z" />
+        <path d="M14 46 L28 34 L28 44 L10 52 Z" />
+        <path d="M46 46 L32 34 L32 44 L50 52 Z" />
+      </g>
+    </svg>
+  );
+}
+
+export function DefenderIcon() {
+  return (
+    <svg viewBox="0 0 60 60" width="48" height="48" aria-hidden="true">
+      <path d="M8 30 L38 16 L30 30 L38 44 Z" fill="var(--color-primary-hover)" />
+    </svg>
+  );
+}

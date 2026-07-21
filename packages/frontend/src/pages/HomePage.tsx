@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { games } from '../games/registry';
+import { games, upcomingGames } from '../games/registry';
 import styles from './HomePage.module.scss';
 
 export function HomePage() {
@@ -15,6 +15,21 @@ export function HomePage() {
               <h2 className={styles.cardTitle}>{game.name}</h2>
               <p className={styles.cardDescription}>{game.description}</p>
             </Link>
+          );
+        })}
+      </div>
+
+      <h2 className={styles.sectionHeading}>Coming soon</h2>
+      <div className={styles.grid}>
+        {upcomingGames.map((game) => {
+          const Icon = game.icon;
+          return (
+            <div key={game.slug} className={`${styles.card} ${styles.cardDisabled}`}>
+              <span className={styles.soonBadge}>Coming soon</span>
+              <Icon />
+              <h2 className={styles.cardTitle}>{game.name}</h2>
+              <p className={styles.cardDescription}>{game.description}</p>
+            </div>
           );
         })}
       </div>
