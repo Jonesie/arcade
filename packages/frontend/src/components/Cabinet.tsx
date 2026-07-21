@@ -17,9 +17,13 @@ export function Cabinet({ children }: { children: ReactNode }) {
       <div className={styles.cabinet}>
         <div className={styles.marquee}>
           <div className={styles.marqueeRow}>
-            <div className={`${styles.neonText} ${styles.marquee24}`} aria-hidden="true">
+            <Link
+              to="/"
+              className={`${styles.marqueeLink} ${styles.neonText} ${styles.marquee24}`}
+              aria-label="24 Hour — home"
+            >
               24 Hour
-            </div>
+            </Link>
             <Link to="/" className={styles.marqueeLink} aria-label="The Dog House — home">
               <div className={styles.neonText}>The Dog</div>
               <div className={styles.neonText}>House</div>
