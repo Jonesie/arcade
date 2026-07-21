@@ -6,24 +6,19 @@ export function NavBar() {
   const { user, logout } = useAuth();
 
   return (
-    <header className={styles.nav}>
-      <Link to="/" className={styles.brand}>
-        The Dog House
-      </Link>
-      <nav className={styles.links}>
-        <Link to="/leaderboard">Leaderboard</Link>
-        {user ? (
-          <>
-            <span className={styles.user}>{user.displayName}</span>
-            <button onClick={() => void logout()}>Log out</button>
-          </>
-        ) : (
-          <>
-            <Link to="/login">Log in</Link>
-            <Link to="/register">Register</Link>
-          </>
-        )}
-      </nav>
-    </header>
+    <nav className={styles.links}>
+      <Link to="/leaderboard">Leaderboard</Link>
+      {user ? (
+        <>
+          <span className={styles.user}>{user.displayName}</span>
+          <button onClick={() => void logout()}>Log out</button>
+        </>
+      ) : (
+        <>
+          <Link to="/login">Log in</Link>
+          <Link to="/register">Register</Link>
+        </>
+      )}
+    </nav>
   );
 }

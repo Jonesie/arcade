@@ -30,8 +30,13 @@
   border: 1px solid #443722;
   border-bottom: none;
   border-radius: 16px 16px 0 0;
-  padding: 0.9rem 1rem 1rem;
+  padding: 0.9rem 1rem 0.8rem;
   text-align: center;
+}
+
+.marqueeLink {
+  display: block;
+  text-decoration: none;
 }
 
 .marqueeThe {
@@ -291,14 +296,26 @@
 // Below this width the physical cabinet chrome would eat too much of a
 // small screen for what it adds — drop it and let the CRT screen (still
 // scanlined) fill the viewport so the site stays fully usable on a phone.
+// The marquee now carries the site title *and* real navigation (see
+// Cabinet.tsx), so unlike the purely decorative control panel and base
+// plate, it has to stay visible on small screens — just de-chromed to a
+// plain top strip instead of the full cabinet graphic.
 @media (max-width: 640px) {
   .root {
     padding: 0;
   }
-  .marquee,
   .controlPanel,
   .cabinetBase {
     display: none;
+  }
+  .marquee {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 0.75rem 1rem 0.65rem;
+  }
+  .marqueeText {
+    font-size: clamp(22px, 7vw, 28px);
   }
   .bezel {
     border: none;

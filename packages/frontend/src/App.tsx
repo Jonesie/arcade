@@ -2,7 +2,6 @@ import type { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { Cabinet } from './components/Cabinet';
-import { NavBar } from './components/NavBar';
 import { GamePage } from './pages/GamePage';
 import { HomePage } from './pages/HomePage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
@@ -19,7 +18,6 @@ function RequireAuth({ children }: { children: ReactElement }) {
 export default function App() {
   return (
     <Cabinet>
-      <NavBar />
       <main className="page">
         <Routes>
           <Route path="/" element={<HomePage />} />

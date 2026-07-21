@@ -1,20 +1,26 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { NavBar } from './NavBar';
 import styles from './Cabinet.module.scss';
 
 /**
- * Decorative 1980s-arcade-cabinet chrome around the real site. `children`
- * (nav + routed page) render inside the CRT screen unchanged — this only
- * adds the marquee/bezel/control-panel frame around them. All of the
- * cabinet parts are decorative (aria-hidden); real navigation and controls
- * live inside the screen exactly as before.
+ * Decorative 1980s-arcade-cabinet chrome around the real site. The neon
+ * marquee doubles as the home link and hosts the site nav, so the title
+ * isn't repeated inside the screen. `children` (the routed page) render
+ * inside the CRT screen unchanged. The rest of the cabinet (bezel screws,
+ * joystick, buttons, coin slot, base plate) is purely decorative
+ * (aria-hidden, pointer-events: none).
  */
 export function Cabinet({ children }: { children: ReactNode }) {
   return (
     <div className={styles.root}>
       <div className={styles.cabinet}>
-        <div className={styles.marquee} aria-hidden="true">
-          <div className={styles.marqueeThe}>The</div>
-          <div className={styles.marqueeText}>Dog House</div>
+        <div className={styles.marquee}>
+          <Link to="/" className={styles.marqueeLink} aria-label="The Dog House — home">
+            <div className={styles.marqueeThe}>The</div>
+            <div className={styles.marqueeText}>Dog House</div>
+          </Link>
+          <NavBar />
         </div>
 
         <div className={styles.bezel}>
