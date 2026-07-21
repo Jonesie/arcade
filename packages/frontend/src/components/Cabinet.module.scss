@@ -143,6 +143,10 @@
     inset 0 0 40px rgba(124, 108, 240, 0.28),
     0 0 24px rgba(124, 108, 240, 0.2);
 
+  // The scanline/vignette overlay lives on .screen itself (not
+  // .screenContent) so that on the fixed-height desktop layout, where
+  // .screenContent scrolls internally, the CRT-glass effect stays put over
+  // the visible screen instead of scrolling away with the page content.
   &::after {
     content: '';
     position: absolute;
@@ -273,14 +277,49 @@
   }
 }
 
+// The lower cabinet body — real machines are mostly this: a tall wood-look
+// door below the control panel, with the coin mechanism set into it.
 .cabinetBase {
-  background: var(--cab-black);
-  border: 1px solid #2a241a;
+  background:
+    repeating-linear-gradient(
+      98deg,
+      rgba(0, 0, 0, 0.16) 0px,
+      rgba(0, 0, 0, 0.16) 2px,
+      transparent 2px,
+      transparent 7px
+    ),
+    linear-gradient(180deg, #4d3420, #2a1c10);
+  border: 1px solid #241708;
   border-top: none;
-  border-radius: 0 0 12px 12px;
-  padding: 0.6rem 1rem 0.9rem;
+  border-radius: 0 0 14px 14px;
+  padding: 1.25rem 1rem;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  gap: 0.85rem;
+}
+
+.coinDoor {
+  width: 78px;
+  height: 54px;
+  background: linear-gradient(180deg, #131110, #060504);
+  border: 2px solid #382a1a;
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 10px rgba(0, 0, 0, 0.85),
+    0 2px 3px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coinDoorDial {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--chrome-hi), var(--chrome-lo) 70%);
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.6);
 }
 
 .plate {
@@ -291,6 +330,51 @@
   border: 1px solid #3a3327;
   padding: 3px 10px;
   border-radius: 3px;
+}
+
+// A real cabinet is a fixed-height standee, not a box that grows with
+// whatever's on screen — so above the mobile breakpoint the whole cabinet
+// fills the viewport at a fixed height, proportioned like the reference
+// (screen dominant, but a real wood-grain body below it, not just a thin
+// strip). .screenContent becomes the one scrolling region, so long pages
+// (e.g. the leaderboard) still work without the cabinet itself resizing.
+@media (min-width: 641px) {
+  .root {
+    height: 100vh;
+    overflow: hidden;
+    padding: 1.25rem 1rem;
+  }
+  .cabinet {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .marquee {
+    flex: 0 0 auto;
+  }
+  .bezel {
+    flex: 3 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .screen {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .screenContent {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .controlPanel {
+    flex: 0 0 auto;
+  }
+  .cabinetBase {
+    flex: 2 1 0;
+    min-height: 0;
+  }
 }
 
 // Below this width the physical cabinet chrome would eat too much of a

@@ -33,7 +33,9 @@ export function Cabinet({ children }: { children: ReactNode }) {
           <div className={`${styles.screw} ${styles.tr}`} aria-hidden="true" />
           <div className={`${styles.screw} ${styles.bl}`} aria-hidden="true" />
           <div className={`${styles.screw} ${styles.br}`} aria-hidden="true" />
-          <div className={styles.screen}>{children}</div>
+          <div className={styles.screen}>
+            <div className={styles.screenContent}>{children}</div>
+          </div>
         </div>
 
         <div className={styles.controlPanel} aria-hidden="true">
@@ -54,6 +56,9 @@ export function Cabinet({ children }: { children: ReactNode }) {
         </div>
 
         <div className={styles.cabinetBase} aria-hidden="true">
+          <div className={styles.coinDoor}>
+            <div className={styles.coinDoorDial} />
+          </div>
           <span className={styles.plate}>Player 1</span>
         </div>
       </div>
