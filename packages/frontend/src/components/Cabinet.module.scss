@@ -34,31 +34,27 @@
   text-align: center;
 }
 
+// The reference sign is two separate neon signs side by side across the
+// shopfront — "24 hour" on the left, "The Dog House" on the right — not
+// one centered logo, so the marquee mirrors that as a two-up row.
+.marqueeRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.5rem, 7vw, 4rem);
+  flex-wrap: wrap;
+}
+
 .marqueeLink {
   display: block;
   text-decoration: none;
+  line-height: 1.05;
 }
 
-.marqueeThe {
+.neonText {
   font-weight: 700;
-  font-size: clamp(12px, 2.4vw, 15px);
-  letter-spacing: 0.55em;
-  text-transform: uppercase;
-  color: #fff0ee;
-  text-shadow:
-    0 0 3px #fff,
-    0 0 8px var(--neon-red),
-    0 0 16px var(--neon-red);
-  margin: 0 0 0.2rem;
-  // Optically re-center under the wider word below despite the extreme
-  // letter-spacing pushing its last character out past the block edge.
-  padding-left: 0.55em;
-}
-
-.marqueeText {
-  font-weight: 700;
-  font-size: clamp(28px, 6.5vw, 40px);
-  letter-spacing: 0.08em;
+  font-size: clamp(20px, 5vw, 30px);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #fff5f2;
   text-shadow:
@@ -67,6 +63,10 @@
     0 0 22px var(--neon-red),
     0 0 44px rgba(255, 42, 31, 0.65),
     0 0 3px var(--neon-red-soft);
+}
+
+.marquee24 {
+  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -314,8 +314,8 @@
     border-right: none;
     padding: 0.75rem 1rem 0.65rem;
   }
-  .marqueeText {
-    font-size: clamp(22px, 7vw, 28px);
+  .marqueeRow {
+    gap: 1.25rem 2rem;
   }
   .bezel {
     border: none;
