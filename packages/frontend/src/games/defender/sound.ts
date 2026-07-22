@@ -3,10 +3,11 @@
  * sound modules: no binary audio assets, no risk of reproducing any
  * original recordings. Defender gets more attention here than the other
  * games — frequency *sweeps* instead of flat tones for anything that
- * should feel like it's falling, panicking, or dying (the laser, the
- * humanoid's scream, the smart bomb), and a persistent thrust drone
- * that's ramped rather than retriggered every frame, so holding a
- * direction doesn't sound like a machine gun of clicks.
+ * should feel like it's falling, panicking, or dying (the humanoid's
+ * scream, the smart bomb), a two-layer "pew" for the laser (see
+ * laserShot), and a persistent thrust drone that's ramped rather than
+ * retriggered every frame, so holding a direction doesn't sound like a
+ * machine gun of clicks.
  */
 import { isMuted } from '../../audio/muteState';
 
@@ -70,6 +71,44 @@ function noise(duration: number, gain: number) {
   source.start(now);
 }
 
+// The player's own shot: a fast-plunging sawtooth (the core "pew" swoop)
+// layered with a quieter, brighter octave-up square that decays faster —
+// that second layer is what gives it some bite/sparkle right at the
+// start instead of reading as a single flat blip.
+function laserShot() {
+  if (isMuted() || !audioCtx) return;
+  const ctx = audioCtx;
+  const now = ctx.currentTime;
+  const duration = 0.14;
+
+  const body = ctx.createOscillator();
+  const bodyGain = ctx.createGain();
+  body.type = 'sawtooth';
+  body.frequency.setValueAtTime(2200, now);
+  body.frequency.exponentialRampToValueAtTime(160, now + duration);
+  bodyGain.gain.setValueAtTime(0.0001, now);
+  bodyGain.gain.exponentialRampToValueAtTime(0.18, now + 0.008);
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  body.connect(bodyGain);
+  bodyGain.connect(ctx.destination);
+  body.start(now);
+  body.stop(now + duration);
+
+  const sparkleDuration = duration * 0.7;
+  const sparkle = ctx.createOscillator();
+  const sparkleGain = ctx.createGain();
+  sparkle.type = 'square';
+  sparkle.frequency.setValueAtTime(4400, now);
+  sparkle.frequency.exponentialRampToValueAtTime(320, now + sparkleDuration);
+  sparkleGain.gain.setValueAtTime(0.0001, now);
+  sparkleGain.gain.exponentialRampToValueAtTime(0.06, now + 0.006);
+  sparkleGain.gain.exponentialRampToValueAtTime(0.0001, now + sparkleDuration);
+  sparkle.connect(sparkleGain);
+  sparkleGain.connect(ctx.destination);
+  sparkle.start(now);
+  sparkle.stop(now + sparkleDuration);
+}
+
 function chime(): void {
   tone(660, 0.09, 'square', 0.11);
   setTimeout(() => tone(880, 0.09, 'square', 0.11), 70);
@@ -77,7 +116,7 @@ function chime(): void {
 }
 
 export const sfx = {
-  shoot: () => sweep(1500, 480, 0.08, 'square', 0.11),
+  shoot: () => laserShot(),
   enemyKilled: () => {
     noise(0.22, 0.2);
     tone(90, 0.22, 'triangle', 0.16);

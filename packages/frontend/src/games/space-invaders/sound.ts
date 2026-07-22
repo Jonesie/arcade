@@ -36,22 +36,42 @@ function tone(freq: number, duration: number, type: OscillatorType, gain: number
   osc.stop(now + duration);
 }
 
-// A quick descending-pitch sweep reads as a much more "pew pew" laser
-// blaster than a flat tone — used for the player's own shot.
-function sweep(freqFrom: number, freqTo: number, duration: number, type: OscillatorType, gain: number) {
+// The player's own shot: a fast-plunging sawtooth (the core "pew" swoop)
+// layered with a quieter, brighter octave-up square that decays faster —
+// that second layer is what gives it some bite/sparkle right at the
+// start instead of reading as a single flat blip.
+function laserShot() {
   if (isMuted() || !audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  osc.type = type;
-  const now = audioCtx.currentTime;
-  osc.frequency.setValueAtTime(freqFrom, now);
-  osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqTo), now + duration);
-  osc.connect(g);
-  g.connect(audioCtx.destination);
-  g.gain.setValueAtTime(gain, now);
-  g.gain.exponentialRampToValueAtTime(0.001, now + duration);
-  osc.start(now);
-  osc.stop(now + duration);
+  const ctx = audioCtx;
+  const now = ctx.currentTime;
+  const duration = 0.14;
+
+  const body = ctx.createOscillator();
+  const bodyGain = ctx.createGain();
+  body.type = 'sawtooth';
+  body.frequency.setValueAtTime(2200, now);
+  body.frequency.exponentialRampToValueAtTime(160, now + duration);
+  bodyGain.gain.setValueAtTime(0.0001, now);
+  bodyGain.gain.exponentialRampToValueAtTime(0.18, now + 0.008);
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  body.connect(bodyGain);
+  bodyGain.connect(ctx.destination);
+  body.start(now);
+  body.stop(now + duration);
+
+  const sparkleDuration = duration * 0.7;
+  const sparkle = ctx.createOscillator();
+  const sparkleGain = ctx.createGain();
+  sparkle.type = 'square';
+  sparkle.frequency.setValueAtTime(4400, now);
+  sparkle.frequency.exponentialRampToValueAtTime(320, now + sparkleDuration);
+  sparkleGain.gain.setValueAtTime(0.0001, now);
+  sparkleGain.gain.exponentialRampToValueAtTime(0.06, now + 0.006);
+  sparkleGain.gain.exponentialRampToValueAtTime(0.0001, now + sparkleDuration);
+  sparkle.connect(sparkleGain);
+  sparkleGain.connect(ctx.destination);
+  sparkle.start(now);
+  sparkle.stop(now + sparkleDuration);
 }
 
 function noise(duration: number, gain: number) {
@@ -75,7 +95,7 @@ function noise(duration: number, gain: number) {
 const MARCH_NOTES = [220, 196, 175, 165];
 
 export const sfx = {
-  shoot: () => sweep(1400, 500, 0.09, 'square', 0.11),
+  shoot: () => laserShot(),
   invaderHit: () => noise(0.12, 0.2),
   ufoHit: () => tone(1200, 0.22, 'sawtooth', 0.15),
   playerHit: () => noise(0.45, 0.28),
