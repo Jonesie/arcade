@@ -1,7 +1,9 @@
+import { useRef } from 'react';
 import styles from '../attract/DemoCanvas.module.scss';
 import { EngineDemo } from '../attract/EngineDemo';
-import { alienRect, createInitialState, PLAYER_W, update, WIDTH, HEIGHT, type GameInput, type GameState } from './engine';
+import { alienRect, createInitialState, PLAYER_W, update, WIDTH, HEIGHT, type GameEvent, type GameInput, type GameState } from './engine';
 import { render } from './render';
+import { ensureAudio, sfx } from './sound';
 
 // Simple attract-mode bot: track under whichever alien is closest to the
 // ship's current column and fire continuously. Doesn't dodge alien fire —
@@ -27,6 +29,8 @@ function computeInput(state: GameState): GameInput {
 }
 
 export function SpaceInvadersDemo() {
+  const marchBeatRef = useRef(0);
+
   return (
     <EngineDemo
       width={WIDTH}
@@ -37,6 +41,38 @@ export function SpaceInvadersDemo() {
       computeInput={computeInput}
       isGameOver={(state) => state.gameOver}
       className={styles.canvas}
+      onStart={() => {
+        marchBeatRef.current = 0;
+        ensureAudio();
+      }}
+      onFrame={(_state, _input, events) => {
+        for (const event of events as GameEvent[]) {
+          switch (event.type) {
+            case 'shoot':
+              sfx.shoot();
+              break;
+            case 'invaderKilled':
+              sfx.invaderHit();
+              break;
+            case 'ufoHit':
+              sfx.ufoHit();
+              break;
+            case 'playerHit':
+              sfx.playerHit();
+              break;
+            case 'waveClear':
+              sfx.waveClear();
+              break;
+            case 'march':
+              marchBeatRef.current += 1;
+              sfx.march(marchBeatRef.current);
+              break;
+            case 'gameOver':
+              sfx.gameOver();
+              break;
+          }
+        }
+      }}
     />
   );
 }

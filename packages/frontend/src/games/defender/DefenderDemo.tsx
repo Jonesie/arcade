@@ -1,7 +1,8 @@
 import styles from '../attract/DemoCanvas.module.scss';
 import { EngineDemo } from '../attract/EngineDemo';
-import { createInitialState, update, WIDTH, HEIGHT, WORLD_WIDTH, wrapDelta, type GameInput, type GameState } from './engine';
+import { createInitialState, update, WIDTH, HEIGHT, WORLD_WIDTH, wrapDelta, type GameEvent, type GameInput, type GameState } from './engine';
 import { render } from './render';
+import { ensureAudio, setThrust, sfx, stopThrust } from './sound';
 
 // Fly toward whichever enemy is nearest (by shortest wraparound distance),
 // matching altitude, and fire once roughly on target. Never uses the
@@ -48,6 +49,42 @@ export function DefenderDemo() {
       computeInput={computeInput}
       isGameOver={(state) => state.gameOver}
       className={styles.canvas}
+      onStart={() => ensureAudio()}
+      onStop={() => stopThrust()}
+      onFrame={(_state, input, events) => {
+        setThrust(input.left || input.right || input.up || input.down);
+        for (const event of events as GameEvent[]) {
+          switch (event.type) {
+            case 'shoot':
+              sfx.shoot();
+              break;
+            case 'enemyKilled':
+              sfx.enemyKilled();
+              break;
+            case 'humanoidGrabbed':
+              sfx.humanoidGrabbed();
+              break;
+            case 'humanoidRescued':
+              sfx.humanoidRescued();
+              break;
+            case 'humanoidLost':
+              sfx.humanoidLost();
+              break;
+            case 'smartBomb':
+              sfx.smartBomb();
+              break;
+            case 'playerHit':
+              sfx.playerHit();
+              break;
+            case 'waveClear':
+              sfx.waveClear();
+              break;
+            case 'gameOver':
+              sfx.gameOver();
+              break;
+          }
+        }
+      }}
     />
   );
 }

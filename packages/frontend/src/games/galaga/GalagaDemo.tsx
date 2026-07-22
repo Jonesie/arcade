@@ -1,7 +1,8 @@
 import styles from '../attract/DemoCanvas.module.scss';
 import { EngineDemo } from '../attract/EngineDemo';
-import { createInitialState, PLAYER_W, update, WIDTH, HEIGHT, type GameInput, type GameState } from './engine';
+import { createInitialState, PLAYER_W, update, WIDTH, HEIGHT, type GameEvent, type GameInput, type GameState } from './engine';
 import { render } from './render';
+import { ensureAudio, sfx, startMusic, stopMusic } from './sound';
 
 // Track under whichever enemy (formation or diving) is closest and fire
 // continuously — doesn't dodge dive attacks, same "imperfect bot, restarts
@@ -33,6 +34,38 @@ export function GalagaDemo() {
       computeInput={computeInput}
       isGameOver={(state) => state.gameOver}
       className={styles.canvas}
+      onStart={() => {
+        ensureAudio();
+        startMusic();
+      }}
+      onStop={() => stopMusic()}
+      onFrame={(_state, _input, events) => {
+        for (const event of events as GameEvent[]) {
+          switch (event.type) {
+            case 'shoot':
+              sfx.shoot();
+              break;
+            case 'enemyHit':
+              sfx.enemyHit();
+              break;
+            case 'enemyKilled':
+              sfx.enemyKilled();
+              break;
+            case 'enemyFire':
+              sfx.enemyFire();
+              break;
+            case 'playerHit':
+              sfx.playerHit();
+              break;
+            case 'waveClear':
+              sfx.waveClear();
+              break;
+            case 'gameOver':
+              sfx.gameOver();
+              break;
+          }
+        }
+      }}
     />
   );
 }

@@ -1,7 +1,8 @@
-import { createInitialState, tickUpdate, TICK_MS, type GameState } from '@arcade/shared';
+import { createInitialState, tickUpdate, TICK_MS, type GameEvent, type GameState } from '@arcade/shared';
 import { useEffect, useRef } from 'react';
 import styles from '../attract/DemoCanvas.module.scss';
 import { render, WIDTH, HEIGHT } from './render';
+import { ensureAudio, sfx } from './sound';
 
 /**
  * Frogger's tick-based `tickUpdate(state, tick, hop?)` doesn't fit the
@@ -21,6 +22,30 @@ export function FroggerDemo() {
     let startTime = performance.now();
     let restartAt: number | null = null;
 
+    ensureAudio();
+
+    function handleEvents(events: GameEvent[]) {
+      for (const event of events) {
+        switch (event.type) {
+          case 'hop':
+            sfx.hop();
+            break;
+          case 'slotFilled':
+            sfx.slotFilled();
+            break;
+          case 'levelClear':
+            sfx.levelClear();
+            break;
+          case 'died':
+            sfx.died();
+            break;
+          case 'gameOver':
+            sfx.gameOver();
+            break;
+        }
+      }
+    }
+
     function loop(now: number) {
       if (restartAt != null) {
         if (now >= restartAt) {
@@ -37,7 +62,8 @@ export function FroggerDemo() {
       const currentTick = Math.floor(elapsed / TICK_MS);
       if (currentTick > lastTick) {
         for (let t = lastTick + 1; t <= currentTick; t++) {
-          tickUpdate(state, t, t === currentTick ? 'up' : undefined);
+          const events = tickUpdate(state, t, t === currentTick ? 'up' : undefined);
+          handleEvents(events);
         }
         lastTick = currentTick;
       }
