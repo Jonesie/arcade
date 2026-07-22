@@ -1,8 +1,26 @@
+// Styled after a classic arcade high-score screen: black background,
+// a blocky monospaced title, and a borderless table where every rank
+// gets its own color instead of one uniform theme.
+.title {
+  text-align: center;
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-weight: 700;
+  font-size: clamp(1.5rem, 5vw, 2.2rem);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #5fa8ff;
+  text-shadow:
+    0 0 6px rgba(95, 168, 255, 0.8),
+    0 0 16px rgba(95, 168, 255, 0.5);
+  margin: 0 0 1.5rem;
+}
+
 .tabs {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .tab {
@@ -15,11 +33,39 @@
   }
 }
 
-.rank {
-  color: var(--color-text-muted);
-  width: 2.5rem;
+.table {
+  background: #000;
+  border-radius: var(--radius);
+  padding: 1rem 0;
+  font-family: 'Courier New', ui-monospace, monospace;
+  letter-spacing: 0.05em;
+
+  th,
+  td {
+    text-align: center;
+    border-bottom: none;
+    padding: 0.4rem 0.75rem;
+  }
+
+  th {
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  td {
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
 }
 
 .empty {
   color: var(--color-text-muted);
+  text-align: center;
 }

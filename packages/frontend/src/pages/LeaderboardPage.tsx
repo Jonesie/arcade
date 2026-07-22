@@ -20,6 +20,20 @@ interface GameRow {
 
 type Tab = 'global' | (string & {});
 
+// Cycles through a fixed palette per rank, like a classic arcade
+// high-score table where every row gets its own color rather than a
+// uniform theme — see the reference screenshot this page is styled after.
+const RANK_COLORS = ['#f2f0fb', '#ff4d4d', '#4dd8ff', '#b06bff', '#4ade80', '#ffe14d', '#5cf27a', '#5fa8ff', '#ffb454', '#f2f0fb'];
+
+function ordinal(n: number): string {
+  const j = n % 10;
+  const k = n % 100;
+  if (j === 1 && k !== 11) return `${n}ST`;
+  if (j === 2 && k !== 12) return `${n}ND`;
+  if (j === 3 && k !== 13) return `${n}RD`;
+  return `${n}TH`;
+}
+
 export function LeaderboardPage() {
   const [tab, setTab] = useState<Tab>('global');
 
@@ -35,8 +49,12 @@ export function LeaderboardPage() {
     enabled: tab !== 'global',
   });
 
+  const isEmpty = tab === 'global' ? globalQuery.data?.leaderboard.length === 0 : gameQuery.data?.leaderboard.length === 0;
+
   return (
     <div>
+      <h1 className={styles.title}>High Scores</h1>
+
       <div className={styles.tabs}>
         <button className={`${styles.tab} ${tab === 'global' ? styles.active : ''}`} onClick={() => setTab('global')}>
           Global
@@ -53,52 +71,50 @@ export function LeaderboardPage() {
       </div>
 
       {tab === 'global' ? (
-        <table>
+        <table className={styles.table}>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Player</th>
-              <th>Total points</th>
-              <th>Total plays</th>
+              <th>Rank</th>
+              <th>Points</th>
+              <th>Plays</th>
+              <th>Name</th>
             </tr>
           </thead>
           <tbody>
             {globalQuery.data?.leaderboard.map((row, i) => (
-              <tr key={row.username}>
-                <td className={styles.rank}>{i + 1}</td>
-                <td>{row.displayName}</td>
+              <tr key={row.username} style={{ color: RANK_COLORS[i % RANK_COLORS.length] }}>
+                <td>{ordinal(i + 1)}</td>
                 <td>{row.totalPoints}</td>
                 <td>{row.totalPlays}</td>
+                <td>{row.displayName}</td>
               </tr>
             ))}
           </tbody>
         </table>
       ) : (
-        <table>
+        <table className={styles.table}>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Player</th>
-              <th>Best score</th>
+              <th>Rank</th>
+              <th>Score</th>
               <th>Plays</th>
+              <th>Name</th>
             </tr>
           </thead>
           <tbody>
             {gameQuery.data?.leaderboard.map((row, i) => (
-              <tr key={row.username}>
-                <td className={styles.rank}>{i + 1}</td>
-                <td>{row.displayName}</td>
+              <tr key={row.username} style={{ color: RANK_COLORS[i % RANK_COLORS.length] }}>
+                <td>{ordinal(i + 1)}</td>
                 <td>{row.bestScore}</td>
                 <td>{row.plays}</td>
+                <td>{row.displayName}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
 
-      {(tab === 'global' ? globalQuery.data?.leaderboard.length === 0 : gameQuery.data?.leaderboard.length === 0) && (
-        <p className={styles.empty}>No scores yet — be the first!</p>
-      )}
+      {isEmpty && <p className={styles.empty}>No scores yet — be the first!</p>}
     </div>
   );
 }
