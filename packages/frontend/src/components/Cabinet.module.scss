@@ -83,7 +83,16 @@
     0 0 3px var(--neon-red-soft);
 }
 
+// Fixed-width regardless of which word is showing (the longest, "Video
+// Games", sets the floor, generous enough to cover letter-spacing on
+// top) — otherwise every cycle nudges this link's intrinsic width, and
+// since .marqueeRow centers the row as a unit, "The Dog House" on the
+// other side visibly shifts every time the word changes.
 .cyclingWord {
+  display: inline-block;
+  min-width: 14ch;
+  text-align: center;
+
   @media (prefers-reduced-motion: no-preference) {
     animation: wordFade 0.5s ease;
   }

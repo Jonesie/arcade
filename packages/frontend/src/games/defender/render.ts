@@ -48,20 +48,28 @@ const EXHAUST_COLORS = ['#fff3b0', '#ffd24d', '#ff9a4d', '#ff6f9e', '#c78bff'];
 let exhaust: ExhaustParticle[] = [];
 let lastExhaustTime: number | null = null;
 
-/** Gentle periodic rolling-hill line — a pure function of world x (built
- * from sines whose frequencies are whole multiples of the world's period)
- * so it lines up seamlessly at the wrap seam without storing anything. */
+/** Jagged mountain-range horizon — a pure function of world x (built from
+ * sines whose frequencies are whole multiples of the world's period, so
+ * it lines up seamlessly at the wrap seam without storing anything).
+ * `abs(sin(...))` rather than plain `sin(...)` gives sharp cusped peaks
+ * instead of smooth rolling hills, and everything only ever pushes the
+ * line *up* (never below the baseline) so it reads as a mountain range
+ * silhouette rather than a wavy line. */
 function terrainOffset(worldX: number): number {
   const t = (worldX / WORLD_WIDTH) * Math.PI * 2;
-  return Math.sin(t * 3) * 5 + Math.sin(t * 7 + 1.3) * 3;
+  const ridge = Math.abs(Math.sin(t * 3)) * 22 + Math.abs(Math.sin(t * 7 + 1.3)) * 12 + Math.abs(Math.sin(t * 17 + 0.7)) * 6;
+  return -ridge;
 }
 
 function screenX(cameraX: number, worldX: number): number {
   return WIDTH / 2 + wrapDelta(cameraX, worldX, WORLD_WIDTH);
 }
 
-// A sleeker swept-wing silhouette (rounded nose, tapered tail, a lit
-// cockpit canopy) rather than a plain arrow triangle.
+// Slim, X-wing-in-profile-inspired silhouette: a long tapered nose and a
+// thin fuselage (much narrower than a chunky arrow), plus a pair of
+// thin "S-foil" struts above and below the body — edge-on stand-ins for
+// the four wings, since drawing them at an angle isn't worth it at this
+// scale — and a lit cockpit canopy.
 function drawShip(ctx: CanvasRenderingContext2D, x: number, y: number, facing: 1 | -1, hidden: boolean): void {
   if (hidden) return;
   ctx.save();
@@ -69,19 +77,23 @@ function drawShip(ctx: CanvasRenderingContext2D, x: number, y: number, facing: 1
   ctx.scale(facing, 1);
 
   ctx.beginPath();
-  ctx.moveTo(SHIP_W / 2, 0);
-  ctx.lineTo(SHIP_W / 6, -SHIP_H / 2);
-  ctx.lineTo(-SHIP_W / 3, -SHIP_H / 2.1);
-  ctx.lineTo(-SHIP_W / 2, -SHIP_H / 6);
-  ctx.lineTo(-SHIP_W / 2, SHIP_H / 6);
-  ctx.lineTo(-SHIP_W / 3, SHIP_H / 2.1);
-  ctx.lineTo(SHIP_W / 6, SHIP_H / 2);
+  ctx.moveTo(SHIP_W * 0.62, 0);
+  ctx.lineTo(SHIP_W * 0.15, -SHIP_H * 0.32);
+  ctx.lineTo(-SHIP_W * 0.3, -SHIP_H * 0.24);
+  ctx.lineTo(-SHIP_W * 0.55, -SHIP_H * 0.14);
+  ctx.lineTo(-SHIP_W * 0.55, SHIP_H * 0.14);
+  ctx.lineTo(-SHIP_W * 0.3, SHIP_H * 0.24);
+  ctx.lineTo(SHIP_W * 0.15, SHIP_H * 0.32);
   ctx.closePath();
   ctx.fillStyle = '#5cf27a';
   ctx.fill();
 
+  ctx.fillStyle = '#3fae52';
+  ctx.fillRect(-SHIP_W * 0.5, -SHIP_H * 0.62, SHIP_W * 0.4, SHIP_H * 0.16);
+  ctx.fillRect(-SHIP_W * 0.5, SHIP_H * 0.46, SHIP_W * 0.4, SHIP_H * 0.16);
+
   ctx.beginPath();
-  ctx.ellipse(SHIP_W / 8, 0, SHIP_W / 7, SHIP_H / 4.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(SHIP_W * 0.08, 0, SHIP_W * 0.1, SHIP_H * 0.18, 0, 0, Math.PI * 2);
   ctx.fillStyle = '#e6fff2';
   ctx.fill();
 
@@ -169,7 +181,7 @@ export function render(canvas: HTMLCanvasElement | null, state: GameState): void
   ctx.strokeStyle = '#2a6b3a';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  for (let sx = 0; sx <= WIDTH; sx += 8) {
+  for (let sx = 0; sx <= WIDTH; sx += 5) {
     const worldX = wrapPos(cameraX - WIDTH / 2 + sx, WORLD_WIDTH);
     const y = GROUND_Y + terrainOffset(worldX);
     if (sx === 0) ctx.moveTo(sx, y);
