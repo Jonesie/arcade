@@ -8,7 +8,7 @@ interface GlobalRow {
   username: string;
   displayName: string;
   totalPoints: number;
-  gamesPlayed: number;
+  totalPlays: number;
 }
 
 interface GameRow {
@@ -59,7 +59,7 @@ export function LeaderboardPage() {
               <th>#</th>
               <th>Player</th>
               <th>Total points</th>
-              <th>Games played</th>
+              <th>Total plays</th>
             </tr>
           </thead>
           <tbody>
@@ -68,7 +68,7 @@ export function LeaderboardPage() {
                 <td className={styles.rank}>{i + 1}</td>
                 <td>{row.displayName}</td>
                 <td>{row.totalPoints}</td>
-                <td>{row.gamesPlayed}</td>
+                <td>{row.totalPlays}</td>
               </tr>
             ))}
           </tbody>

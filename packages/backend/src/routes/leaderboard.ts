@@ -9,7 +9,7 @@ leaderboardRouter.get('/global', async (_req, res) => {
     .groupBy('u.Id', 'u.Username', 'u.DisplayName')
     .select('u.Username as username', 'u.DisplayName as displayName')
     .sum({ totalPoints: 's.Points' })
-    .countDistinct({ gamesPlayed: 's.GameId' })
+    .count({ totalPlays: 's.Id' })
     .orderBy('totalPoints', 'desc')
     .limit(50);
   res.json({ leaderboard });
