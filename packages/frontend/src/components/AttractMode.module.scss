@@ -1,0 +1,72 @@
+.attract {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  min-height: 50vh;
+  justify-content: center;
+  text-align: center;
+}
+
+.badge {
+  margin: 0;
+  font-family: 'Courier New', ui-monospace, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: var(--color-primary-hover);
+  animation: blink 1.6s steps(1) infinite;
+}
+
+@keyframes blink {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.leaderboardWrap {
+  width: 100%;
+  max-width: 480px;
+}
+
+.leaderboardTitle {
+  text-align: center;
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-weight: 700;
+  font-size: clamp(1.3rem, 4.5vw, 1.9rem);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #5fa8ff;
+  text-shadow:
+    0 0 6px rgba(95, 168, 255, 0.8),
+    0 0 16px rgba(95, 168, 255, 0.5);
+  margin: 0 0 1rem;
+}
+
+.demoWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.gameName {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.demoStage {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 420px;
+}

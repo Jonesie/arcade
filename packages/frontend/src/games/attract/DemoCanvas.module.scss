@@ -1,0 +1,11 @@
+// Scaled by intrinsic aspect ratio (the canvas's width/height attributes)
+// rather than stretched to fill a fixed-ratio wrapper like each game's
+// real component uses — attract mode shows games with different native
+// aspect ratios (Frogger's portrait canvas vs. everything else's
+// landscape one) in the same slot, so this has to adapt per game instead.
+.canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}

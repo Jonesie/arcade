@@ -1,15 +1,21 @@
 import type { ComponentType } from 'react';
 import { Asteroids } from './asteroids/Asteroids';
+import { AsteroidsDemo } from './asteroids/AsteroidsDemo';
 import { AsteroidsIcon } from './asteroids/AsteroidsIcon';
 import { Defender } from './defender/Defender';
+import { DefenderDemo } from './defender/DefenderDemo';
 import { DefenderIcon } from './defender/DefenderIcon';
 import { Frogger } from './frogger/Frogger';
+import { FroggerDemo } from './frogger/FroggerDemo';
 import { FroggerIcon } from './frogger/FroggerIcon';
 import { Galaga } from './galaga/Galaga';
+import { GalagaDemo } from './galaga/GalagaDemo';
 import { GalagaIcon } from './galaga/GalagaIcon';
 import { SpaceInvaders } from './space-invaders/SpaceInvaders';
+import { SpaceInvadersDemo } from './space-invaders/SpaceInvadersDemo';
 import { SpaceInvadersIcon } from './space-invaders/SpaceInvadersIcon';
 import { TicTacToe } from './tic-tac-toe/TicTacToe';
+import { TicTacToeDemo } from './tic-tac-toe/TicTacToeDemo';
 import { TicTacToeIcon } from './tic-tac-toe/TicTacToeIcon';
 import { DonkeyKongIcon } from './upcoming/icons';
 
@@ -19,6 +25,11 @@ export interface GameDefinition {
   description: string;
   icon: ComponentType;
   component: ComponentType;
+  /** Non-interactive attract-mode clip shown on the home page after a
+   * period of idle time (see components/AttractMode.tsx, GitHub issue #5).
+   * Self-play/bot-driven rather than a video file — see each game's own
+   * *Demo.tsx for why. */
+  demo: ComponentType;
 }
 
 export interface UpcomingGame {
@@ -41,6 +52,7 @@ export const games: GameDefinition[] = [
     description: 'Classic 3x3. Play the computer on three difficulties, or pass-and-play locally.',
     icon: TicTacToeIcon,
     component: TicTacToe,
+    demo: TicTacToeDemo,
   },
   {
     slug: 'space-invaders',
@@ -48,6 +60,7 @@ export const games: GameDefinition[] = [
     description: 'Hold the line against a descending alien grid. Classic rules, with sound.',
     icon: SpaceInvadersIcon,
     component: SpaceInvaders,
+    demo: SpaceInvadersDemo,
   },
   {
     slug: 'galaga',
@@ -55,6 +68,7 @@ export const games: GameDefinition[] = [
     description: 'Formations fly in, peel off, and dive-bomb you. Shoot them before they shoot back.',
     icon: GalagaIcon,
     component: Galaga,
+    demo: GalagaDemo,
   },
   {
     slug: 'frogger',
@@ -62,6 +76,7 @@ export const games: GameDefinition[] = [
     description: 'Hop across traffic and a river without becoming roadkill.',
     icon: FroggerIcon,
     component: Frogger,
+    demo: FroggerDemo,
   },
   {
     slug: 'asteroids',
@@ -69,6 +84,7 @@ export const games: GameDefinition[] = [
     description: 'Blast rocks, dodge debris, watch your momentum.',
     icon: AsteroidsIcon,
     component: Asteroids,
+    demo: AsteroidsDemo,
   },
   {
     slug: 'defender',
@@ -76,6 +92,7 @@ export const games: GameDefinition[] = [
     description: 'Fly a wraparound world, shoot down abductors, and rescue the humanoids they grab.',
     icon: DefenderIcon,
     component: Defender,
+    demo: DefenderDemo,
   },
 ];
 

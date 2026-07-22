@@ -1,8 +1,16 @@
 import { Link } from 'react-router-dom';
+import { AttractMode } from '../components/AttractMode';
 import { games, upcomingGames } from '../games/registry';
+import { useAttractMode } from '../hooks/useAttractMode';
 import styles from './HomePage.module.scss';
 
 export function HomePage() {
+  const idle = useAttractMode();
+
+  if (idle) {
+    return <AttractMode />;
+  }
+
   return (
     <div>
       <p className={styles.intro}>Pick a game. High scores count toward the site-wide leaderboard.</p>
