@@ -1,4 +1,4 @@
-import { GROUND_Y, HEIGHT, SHIP_H, SHIP_W, WIDTH, WORLD_WIDTH, wrapDelta, wrapPos, type GameState, type Humanoid } from './engine';
+import { GROUND_Y, HEIGHT, SHIP_H, SHIP_W, SHOCKWAVE_LIFE_S, WIDTH, WORLD_WIDTH, wrapDelta, wrapPos, type GameState, type Humanoid } from './engine';
 
 // Two parallax star layers, generated once at module load and positioned
 // in *world* space so they scroll and wrap exactly like everything else
@@ -145,6 +145,32 @@ function updateAndDrawExhaust(ctx: CanvasRenderingContext2D, state: GameState): 
   ctx.globalAlpha = 1;
 }
 
+// The smart bomb's expanding ring — starts thick/bright and close to its
+// origin, thins and fades as it grows toward SHOCKWAVE_MAX_RADIUS, same
+// "age vs. life" ratio pattern as the exhaust particles above but driven
+// by GameState (see the Shockwave interface in engine.ts) so it ages in
+// step with the simulation rather than its own separate clock.
+const SHOCKWAVE_MAX_RADIUS = 260;
+
+function drawShockwaves(ctx: CanvasRenderingContext2D, state: GameState, cameraX: number): void {
+  for (const wave of state.shockwaves) {
+    const t = Math.min(1, wave.age / SHOCKWAVE_LIFE_S);
+    const radius = t * SHOCKWAVE_MAX_RADIUS;
+    const x = screenX(cameraX, wave.x);
+
+    ctx.save();
+    ctx.globalAlpha = 1 - t;
+    ctx.strokeStyle = '#fff3b0';
+    ctx.lineWidth = 1 + 4 * (1 - t);
+    ctx.shadowColor = '#ffcf6b';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.arc(x, wave.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
 function drawHumanoid(ctx: CanvasRenderingContext2D, x: number, y: number, humanoid: Humanoid): void {
   const color = humanoid.state === 'falling' ? '#ffe14d' : '#5fa8ff';
   ctx.fillStyle = color;
@@ -249,6 +275,7 @@ export function render(canvas: HTMLCanvasElement | null, state: GameState): void
   const hidden = state.player.invulnS > 0 && Math.floor(state.player.invulnS * 10) % 2 === 0;
   updateAndDrawExhaust(ctx, state);
   drawShip(ctx, WIDTH / 2, state.player.y, state.player.facing, hidden);
+  drawShockwaves(ctx, state, cameraX);
 
   // Radar: the whole world laid out linearly (not camera-relative — this
   // is the "see the whole planet at once" map, same idea as the original

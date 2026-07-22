@@ -69,6 +69,7 @@ const BOMB_KILL_RADIUS = 14;
 
 const SMART_BOMB_START = 3;
 const KILLS_PER_WAVE_BASE = 8;
+export const SHOCKWAVE_LIFE_S = 0.6;
 
 export interface Player {
   x: number;
@@ -139,12 +140,23 @@ export interface GameInput {
   smartBomb: boolean;
 }
 
+/** A smart bomb's expanding ring, purely cosmetic (render.ts draws it,
+ * nothing reads it for collisions) — kept on GameState rather than as
+ * render-module-local state so it ages via the same update()/dt the rest
+ * of the simulation uses instead of its own separate clock. */
+export interface Shockwave {
+  x: number;
+  y: number;
+  age: number;
+}
+
 export interface GameState {
   player: Player;
   bullets: Bullet[];
   bombs: Bomb[];
   enemies: Enemy[];
   humanoids: Humanoid[];
+  shockwaves: Shockwave[];
   smartBombs: number;
   score: number;
   lives: number;
@@ -252,6 +264,7 @@ export function createInitialState(): GameState {
     bombs: [],
     enemies,
     humanoids,
+    shockwaves: [],
     smartBombs: SMART_BOMB_START,
     score: 0,
     lives: 3,
@@ -350,12 +363,16 @@ export function update(state: GameState, input: GameInput, dt: number): GameEven
 
   if (input.smartBomb && state.smartBombs > 0) {
     state.smartBombs -= 1;
+    state.shockwaves.push({ x: player.x, y: player.y, age: 0 });
     const inView = state.enemies.filter((e) => Math.abs(wrapDelta(player.x, e.x, WORLD_WIDTH)) < WIDTH / 2 + 20);
     for (const enemy of inView) {
       destroyEnemy(state, enemy, events, enemy.kind === 'lander' ? LANDER_POINTS : BOMBER_POINTS);
     }
     events.push({ type: 'smartBomb' });
   }
+
+  for (const wave of state.shockwaves) wave.age += dt;
+  state.shockwaves = state.shockwaves.filter((w) => w.age < SHOCKWAVE_LIFE_S);
 
   for (const bullet of state.bullets) {
     bullet.x = wrapPos(bullet.x + bullet.vx * dt, WORLD_WIDTH);
