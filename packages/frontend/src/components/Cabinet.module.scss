@@ -83,10 +83,6 @@
     0 0 3px var(--neon-red-soft);
 }
 
-.marquee24 {
-  white-space: nowrap;
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .marquee {
     animation: tubeHum 3.2s ease-in-out infinite;
@@ -255,15 +251,19 @@
 // toggle (see ../audio/muteState), so it needs button-reset + a lit/dim
 // state instead of just being decorative.
 .musicBtn {
+  width: 38px;
+  height: 38px;
   border: none;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 26px;
+  font-weight: 900;
   line-height: 1;
   color: #08131f;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+  -webkit-text-stroke: 0.6px #08131f;
   cursor: pointer;
   transition:
     filter 0.15s ease,
