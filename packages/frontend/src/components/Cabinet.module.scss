@@ -83,6 +83,21 @@
     0 0 3px var(--neon-red-soft);
 }
 
+.cyclingWord {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: wordFade 0.5s ease;
+  }
+}
+
+@keyframes wordFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .marquee {
     animation: tubeHum 3.2s ease-in-out infinite;

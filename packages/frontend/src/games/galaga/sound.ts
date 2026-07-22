@@ -52,8 +52,26 @@ function noise(duration: number, gain: number) {
   source.start(now);
 }
 
+// A quick descending-pitch sweep reads as a much more "pew pew" laser
+// blaster than a flat tone — used for the player's own shot.
+function sweep(freqFrom: number, freqTo: number, duration: number, type: OscillatorType, gain: number) {
+  if (isMuted() || !audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type;
+  const now = audioCtx.currentTime;
+  osc.frequency.setValueAtTime(freqFrom, now);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqTo), now + duration);
+  osc.connect(g);
+  g.connect(audioCtx.destination);
+  g.gain.setValueAtTime(gain, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
 export const sfx = {
-  shoot: () => tone(950, 0.07, 'square', 0.1),
+  shoot: () => sweep(1400, 500, 0.08, 'square', 0.11),
   enemyHit: () => tone(500, 0.08, 'triangle', 0.12),
   enemyKilled: () => noise(0.16, 0.22),
   enemyFire: () => tone(300, 0.12, 'sawtooth', 0.08),

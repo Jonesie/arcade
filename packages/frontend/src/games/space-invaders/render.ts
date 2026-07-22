@@ -34,8 +34,13 @@ export function render(canvas: HTMLCanvasElement | null, state: GameState): void
   }
 
   if (state.playerBullet) {
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(state.playerBullet.x, state.playerBullet.y, 2, 8);
+    // A glowing bolt reads as more "pew pew" than a flat white sliver.
+    ctx.save();
+    ctx.shadowColor = '#8fe3ff';
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = '#eafcff';
+    ctx.fillRect(state.playerBullet.x - 0.5, state.playerBullet.y, 3, 10);
+    ctx.restore();
   }
   ctx.fillStyle = '#f7e05f';
   for (const bullet of state.alienBullets) {

@@ -27,6 +27,27 @@ const RADAR_Y = 6;
 const RADAR_W = WIDTH - 16;
 const RADAR_H = 14;
 
+// Exhaust: a small pool of short-lived sparks trailing off the ship's
+// tail, spawned every render call and aged/drawn in screen space (the
+// ship is always drawn at WIDTH/2, so no world-wrap handling is needed —
+// particles live far too briefly to travel meaningfully far anyway).
+// Kept as module state (like STARS above) rather than on GameState since
+// it's purely cosmetic and never affects collisions/scoring.
+interface ExhaustParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  age: number;
+  life: number;
+  color: string;
+  size: number;
+}
+
+const EXHAUST_COLORS = ['#fff3b0', '#ffd24d', '#ff9a4d', '#ff6f9e', '#c78bff'];
+let exhaust: ExhaustParticle[] = [];
+let lastExhaustTime: number | null = null;
+
 /** Gentle periodic rolling-hill line — a pure function of world x (built
  * from sines whose frequencies are whole multiples of the world's period)
  * so it lines up seamlessly at the wrap seam without storing anything. */
@@ -39,20 +60,77 @@ function screenX(cameraX: number, worldX: number): number {
   return WIDTH / 2 + wrapDelta(cameraX, worldX, WORLD_WIDTH);
 }
 
+// A sleeker swept-wing silhouette (rounded nose, tapered tail, a lit
+// cockpit canopy) rather than a plain arrow triangle.
 function drawShip(ctx: CanvasRenderingContext2D, x: number, y: number, facing: 1 | -1, hidden: boolean): void {
   if (hidden) return;
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(facing, 1);
+
   ctx.beginPath();
   ctx.moveTo(SHIP_W / 2, 0);
-  ctx.lineTo(-SHIP_W / 2, -SHIP_H / 2);
-  ctx.lineTo(-SHIP_W / 4, 0);
-  ctx.lineTo(-SHIP_W / 2, SHIP_H / 2);
+  ctx.lineTo(SHIP_W / 6, -SHIP_H / 2);
+  ctx.lineTo(-SHIP_W / 3, -SHIP_H / 2.1);
+  ctx.lineTo(-SHIP_W / 2, -SHIP_H / 6);
+  ctx.lineTo(-SHIP_W / 2, SHIP_H / 6);
+  ctx.lineTo(-SHIP_W / 3, SHIP_H / 2.1);
+  ctx.lineTo(SHIP_W / 6, SHIP_H / 2);
   ctx.closePath();
   ctx.fillStyle = '#5cf27a';
   ctx.fill();
+
+  ctx.beginPath();
+  ctx.ellipse(SHIP_W / 8, 0, SHIP_W / 7, SHIP_H / 4.5, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#e6fff2';
+  ctx.fill();
+
   ctx.restore();
+}
+
+// Spawn rate/spread scale with the ship's current speed, so it's a
+// gentle idle shimmer when drifting slowly and a proper sparkling trail
+// under thrust — driven by velocity rather than a separate "is thrusting"
+// flag, so this needs no changes to engine.ts at all.
+function updateAndDrawExhaust(ctx: CanvasRenderingContext2D, state: GameState): void {
+  const now = performance.now();
+  const dt = lastExhaustTime == null ? 1 / 60 : Math.min((now - lastExhaustTime) / 1000, 0.05);
+  lastExhaustTime = now;
+
+  const player = state.player;
+  const speed = Math.hypot(player.vx, player.vy);
+  const tailX = WIDTH / 2 - player.facing * (SHIP_W / 2 - 3);
+  const tailY = player.y;
+
+  const spawnCount = Math.min(8, 1 + Math.round(speed / 35));
+  for (let i = 0; i < spawnCount; i++) {
+    exhaust.push({
+      x: tailX + (Math.random() - 0.5) * 3,
+      y: tailY + (Math.random() - 0.5) * 5,
+      vx: -player.facing * (25 + Math.random() * 50) - player.vx * 0.25,
+      vy: (Math.random() - 0.5) * 45,
+      age: 0,
+      life: 0.2 + Math.random() * 0.25,
+      color: EXHAUST_COLORS[Math.floor(Math.random() * EXHAUST_COLORS.length)],
+      size: 1 + Math.random() * 1.6,
+    });
+  }
+
+  for (const p of exhaust) {
+    p.age += dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+  }
+  exhaust = exhaust.filter((p) => p.age < p.life);
+
+  for (const p of exhaust) {
+    const t = p.age / p.life;
+    ctx.globalAlpha = Math.max(0, 1 - t);
+    ctx.fillStyle = p.color;
+    const s = p.size * (1 - t * 0.5);
+    ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s);
+  }
+  ctx.globalAlpha = 1;
 }
 
 function drawHumanoid(ctx: CanvasRenderingContext2D, x: number, y: number, humanoid: Humanoid): void {
@@ -144,14 +222,20 @@ export function render(canvas: HTMLCanvasElement | null, state: GameState): void
     ctx.fill();
   }
 
-  ctx.fillStyle = '#fff98a';
+  // A glowing bolt reads as more "pew pew" than a flat sliver.
+  ctx.save();
+  ctx.shadowColor = '#ffe9a3';
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = '#fffbe0';
   for (const bullet of state.bullets) {
     const x = screenX(cameraX, bullet.x);
     if (x < -8 || x > WIDTH + 8) continue;
-    ctx.fillRect(x - (bullet.vx > 0 ? 6 : 0), bullet.y - 1, 6, 2);
+    ctx.fillRect(x - (bullet.vx > 0 ? 7 : 0), bullet.y - 1.5, 7, 3);
   }
+  ctx.restore();
 
   const hidden = state.player.invulnS > 0 && Math.floor(state.player.invulnS * 10) % 2 === 0;
+  updateAndDrawExhaust(ctx, state);
   drawShip(ctx, WIDTH / 2, state.player.y, state.player.facing, hidden);
 
   // Radar: the whole world laid out linearly (not camera-relative — this

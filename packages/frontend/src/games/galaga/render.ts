@@ -22,10 +22,15 @@ export function render(canvas: HTMLCanvasElement | null, state: GameState): void
     drawEnemy(ctx, enemy.x, enemy.y, color);
   }
 
-  ctx.fillStyle = '#fff';
+  // A glowing bolt reads as more "pew pew" than a flat white sliver.
+  ctx.save();
+  ctx.shadowColor = '#8fe3ff';
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = '#eafcff';
   for (const bullet of state.playerBullets) {
-    ctx.fillRect(bullet.x, bullet.y, 2, 8);
+    ctx.fillRect(bullet.x - 0.5, bullet.y, 3, 10);
   }
+  ctx.restore();
   ctx.fillStyle = '#ff5f5f';
   for (const bullet of state.enemyBullets) {
     ctx.fillRect(bullet.x, bullet.y, 2, 8);

@@ -56,12 +56,17 @@ export function render(canvas: HTMLCanvasElement | null, state: GameState): void
     drawAsteroid(ctx, asteroid, ASTEROID_COLORS[asteroid.size]);
   }
 
-  ctx.fillStyle = '#fff5f2';
+  // A glowing bolt reads as more "pew pew" than a flat dot.
+  ctx.save();
+  ctx.shadowColor = '#8fe3ff';
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = '#eafcff';
   for (const bullet of state.bullets) {
     ctx.beginPath();
-    ctx.arc(bullet.x, bullet.y, 2, 0, Math.PI * 2);
+    ctx.arc(bullet.x, bullet.y, 2.5, 0, Math.PI * 2);
     ctx.fill();
   }
+  ctx.restore();
 
   // Flash the ship while its post-respawn invulnerability is active, same
   // pattern as the other games' hit-flash.

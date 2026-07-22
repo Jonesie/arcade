@@ -1,16 +1,45 @@
-import { createInitialState, tickUpdate, TICK_MS, type GameEvent, type GameState } from '@arcade/shared';
+import { createInitialState, tickUpdate, TICK_MS, type Direction, type GameEvent, type GameState } from '@arcade/shared';
 import { useEffect, useRef } from 'react';
 import styles from '../attract/DemoCanvas.module.scss';
 import { render, WIDTH, HEIGHT } from './render';
 import { ensureAudio, sfx } from './sound';
 
+// Candidates in priority order: prefer making progress, then dodging
+// sideways, then just holding position — tried in order, first one that
+// doesn't cost a life wins.
+const HOP_CANDIDATES: (Direction | undefined)[] = ['up', 'left', 'right', undefined];
+
+function cloneState(state: GameState): GameState {
+  return { ...state, slotsFilled: [...state.slotsFilled] };
+}
+
+// Runs the real tickUpdate against a throwaway clone to see whether a
+// candidate hop would actually be safe — reuses the exact same collision/
+// timeout/home-slot logic the real game uses instead of a separate (and
+// easy to get subtly wrong) heuristic reimplementation of "is this move OK."
+function isSafeMove(state: GameState, tick: number, hop?: Direction): boolean {
+  const trial = cloneState(state);
+  const livesBefore = trial.lives;
+  tickUpdate(trial, tick, hop);
+  return trial.lives >= livesBefore && !trial.gameOver;
+}
+
+function chooseHop(state: GameState, tick: number): Direction | undefined {
+  for (const candidate of HOP_CANDIDATES) {
+    if (isSafeMove(state, tick, candidate)) return candidate;
+  }
+  // Nothing is safe this tick — hop up anyway rather than stall silently.
+  return 'up';
+}
+
 /**
  * Frogger's tick-based `tickUpdate(state, tick, hop?)` doesn't fit the
  * continuous dt/input shape the other games' engines share, so this is a
- * bespoke loop rather than going through EngineDemo. The "bot" is
- * deliberately dumb — hop up every tick, no danger-avoidance — since a
- * frog that dies and respawns every few seconds is exactly the kind of
- * short, self-resetting clip attract mode wants.
+ * bespoke loop rather than going through EngineDemo. The bot looks one
+ * tick ahead (see chooseHop) rather than blindly spamming "up" — it dodges
+ * cars, waits for a log instead of drowning, and generally survives a lot
+ * longer, while still being simple enough to die and restart occasionally
+ * like a normal attract-mode clip.
  */
 export function FroggerDemo() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -62,7 +91,8 @@ export function FroggerDemo() {
       const currentTick = Math.floor(elapsed / TICK_MS);
       if (currentTick > lastTick) {
         for (let t = lastTick + 1; t <= currentTick; t++) {
-          const events = tickUpdate(state, t, t === currentTick ? 'up' : undefined);
+          const hop = t === currentTick ? chooseHop(state, t) : undefined;
+          const events = tickUpdate(state, t, hop);
           handleEvents(events);
         }
         lastTick = currentTick;

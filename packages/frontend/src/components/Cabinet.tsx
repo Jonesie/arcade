@@ -11,6 +11,11 @@ import styles from './Cabinet.module.scss';
 const BACKDROP_IMAGES = ['/branding/doghouse-2.jpg', '/branding/doghouse-3.jpg'];
 // '/branding/doghouse-1.jpg', has a person in it, so it's not suitable for a backdrop.
 
+// The right-hand marquee line cycles through the shopfront's actual menu
+// board items rather than sitting on "Video Games" forever.
+const MARQUEE_WORDS = ['Video Games', 'Burgers', 'Hot Chips', 'Hot Dogs', 'Beatings'];
+const MARQUEE_WORD_INTERVAL_MS = 3000;
+
 /**
  * Decorative 1980s-arcade-cabinet chrome around the real site. The neon
  * marquee doubles as the home link and hosts the site nav, so the title
@@ -34,6 +39,12 @@ export function Cabinet({ children }: { children: ReactNode }) {
   const [muted, setMuted] = useState(isMuted());
   useEffect(() => subscribeMuted(setMuted), []);
 
+  const [wordIndex, setWordIndex] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setWordIndex((i) => (i + 1) % MARQUEE_WORDS.length), MARQUEE_WORD_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, []);
+
   // Picked once per mount (Cabinet wraps every route and doesn't remount on
   // navigation, so this is effectively "once per page load," not per page).
   const [backdrop] = useState(() => BACKDROP_IMAGES[Math.floor(Math.random() * BACKDROP_IMAGES.length)]);
@@ -50,7 +61,9 @@ export function Cabinet({ children }: { children: ReactNode }) {
             </Link>
             <Link to="/" className={styles.marqueeLink} aria-label="24 Hour Video Games — home">
               <div className={styles.neonText}>24 Hour</div>
-              <div className={styles.neonText}>Video Games</div>
+              <div className={`${styles.neonText} ${styles.cyclingWord}`} key={wordIndex}>
+                {MARQUEE_WORDS[wordIndex]}
+              </div>
             </Link>
           </div>
           <NavBar />

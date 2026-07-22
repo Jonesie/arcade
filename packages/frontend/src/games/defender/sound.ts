@@ -77,7 +77,7 @@ function chime(): void {
 }
 
 export const sfx = {
-  shoot: () => sweep(1500, 480, 0.09, 'sawtooth', 0.08),
+  shoot: () => sweep(1500, 480, 0.08, 'square', 0.11),
   enemyKilled: () => {
     noise(0.22, 0.2);
     tone(90, 0.22, 'triangle', 0.16);
