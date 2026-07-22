@@ -120,8 +120,10 @@ export function Cabinet({ children }: { children: ReactNode }) {
           <div className={`${styles.screw} ${styles.br}`} aria-hidden="true" />
           <div className={styles.screen}>
             {game && <h1 className={styles.screenHeader}>{game.name}</h1>}
-            <div className={styles.screenContent}>{children}</div>
-            <RealModeOverlay />
+            <div className={styles.screenBody}>
+              <div className={styles.screenContent}>{children}</div>
+              <RealModeOverlay />
+            </div>
           </div>
         </div>
 

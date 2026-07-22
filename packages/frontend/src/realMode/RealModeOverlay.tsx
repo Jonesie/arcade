@@ -25,8 +25,10 @@ const SCENARIOS: Scenario[] = [
   { type: 'copsArrive', message: 'COPS! EVERYONE OUT!', icon: '🚨', durationMs: 2700, playSfx: sfx.copsArrive },
 ];
 
-const MIN_INTERVAL_MS = 30_000;
-const MAX_INTERVAL_MS = 90_000;
+// Floor of 60s keeps events to at most one per minute, per user feedback
+// that the original 30-90s range felt too frequent.
+const MIN_INTERVAL_MS = 60_000;
+const MAX_INTERVAL_MS = 180_000;
 
 function randomInterval(): number {
   return MIN_INTERVAL_MS + Math.random() * (MAX_INTERVAL_MS - MIN_INTERVAL_MS);
