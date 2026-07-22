@@ -1,6 +1,8 @@
 import type { ComponentType } from 'react';
 import { Asteroids } from './asteroids/Asteroids';
 import { AsteroidsIcon } from './asteroids/AsteroidsIcon';
+import { Defender } from './defender/Defender';
+import { DefenderIcon } from './defender/DefenderIcon';
 import { Frogger } from './frogger/Frogger';
 import { FroggerIcon } from './frogger/FroggerIcon';
 import { Galaga } from './galaga/Galaga';
@@ -9,7 +11,6 @@ import { SpaceInvaders } from './space-invaders/SpaceInvaders';
 import { SpaceInvadersIcon } from './space-invaders/SpaceInvadersIcon';
 import { TicTacToe } from './tic-tac-toe/TicTacToe';
 import { TicTacToeIcon } from './tic-tac-toe/TicTacToeIcon';
-import { DefenderIcon } from './upcoming/icons';
 
 export interface GameDefinition {
   slug: string;
@@ -68,6 +69,13 @@ export const games: GameDefinition[] = [
     icon: AsteroidsIcon,
     component: Asteroids,
   },
+  {
+    slug: 'defender',
+    name: 'Defender',
+    description: 'Fly a wraparound world, shoot down abductors, and rescue the humanoids they grab.',
+    icon: DefenderIcon,
+    component: Defender,
+  },
 ];
 
 export function getGame(slug: string): GameDefinition | undefined {
@@ -79,11 +87,4 @@ export function getGame(slug: string): GameDefinition | undefined {
  * the home page as "coming soon" tiles with no route/component of their
  * own. Move an entry up into `games` once it's actually built.
  */
-export const upcomingGames: UpcomingGame[] = [
-  {
-    slug: 'defender',
-    name: 'Defender',
-    description: 'Protect the ground. Watch the radar.',
-    icon: DefenderIcon,
-  },
-];
+export const upcomingGames: UpcomingGame[] = [];

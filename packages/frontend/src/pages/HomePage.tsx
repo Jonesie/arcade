@@ -19,20 +19,24 @@ export function HomePage() {
         })}
       </div>
 
-      <h2 className={styles.sectionHeading}>Coming soon</h2>
-      <div className={styles.grid}>
-        {upcomingGames.map((game) => {
-          const Icon = game.icon;
-          return (
-            <div key={game.slug} className={`${styles.card} ${styles.cardDisabled}`}>
-              <span className={styles.soonBadge}>Coming soon</span>
-              <Icon />
-              <h2 className={styles.cardTitle}>{game.name}</h2>
-              <p className={styles.cardDescription}>{game.description}</p>
-            </div>
-          );
-        })}
-      </div>
+      {upcomingGames.length > 0 && (
+        <>
+          <h2 className={styles.sectionHeading}>Coming soon</h2>
+          <div className={styles.grid}>
+            {upcomingGames.map((game) => {
+              const Icon = game.icon;
+              return (
+                <div key={game.slug} className={`${styles.card} ${styles.cardDisabled}`}>
+                  <span className={styles.soonBadge}>Coming soon</span>
+                  <Icon />
+                  <h2 className={styles.cardTitle}>{game.name}</h2>
+                  <p className={styles.cardDescription}>{game.description}</p>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
