@@ -11,6 +11,7 @@ import { SpaceInvaders } from './space-invaders/SpaceInvaders';
 import { SpaceInvadersIcon } from './space-invaders/SpaceInvadersIcon';
 import { TicTacToe } from './tic-tac-toe/TicTacToe';
 import { TicTacToeIcon } from './tic-tac-toe/TicTacToeIcon';
+import { DonkeyKongIcon } from './upcoming/icons';
 
 export interface GameDefinition {
   slug: string;
@@ -87,4 +88,11 @@ export function getGame(slug: string): GameDefinition | undefined {
  * the home page as "coming soon" tiles with no route/component of their
  * own. Move an entry up into `games` once it's actually built.
  */
-export const upcomingGames: UpcomingGame[] = [];
+export const upcomingGames: UpcomingGame[] = [
+  {
+    slug: 'donkey-kong',
+    name: 'Donkey Kong',
+    description: 'Climb girders and ladders to the top, dodging barrels rolling down from above.',
+    icon: DonkeyKongIcon,
+  },
+];
