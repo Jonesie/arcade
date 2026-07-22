@@ -5,10 +5,17 @@
  * `AudioContext` needs a user gesture before it can play; `ensureAudio()` is
  * called from the "Start"/"Play again" button handlers, which counts.
  *
- * Mute is a site-wide preference (a cabinet button, not part of this
- * game's own HUD) — see ../../audio/muteState.
+ * Music and sound effects are muted independently (two separate cabinet
+ * buttons, not part of this game's own HUD) — see ../../audio/musicMuteState
+ * and ../../audio/sfxMuteState. The classic Space Invaders never had a
+ * separate music track — its whole musical identity *is* the four-note
+ * marching bassline that speeds up as the formation thins out — so that's
+ * treated as this game's "music" (gated on isMusicMuted) rather than a
+ * regular sound effect, while everything else (shots, hits, the UFO,
+ * game over) is a one-shot effect gated on isSfxMuted.
  */
-import { isMuted } from '../../audio/muteState';
+import { isMusicMuted } from '../../audio/musicMuteState';
+import { isSfxMuted } from '../../audio/sfxMuteState';
 
 let audioCtx: AudioContext | null = null;
 
@@ -22,7 +29,24 @@ export function ensureAudio(): void {
 }
 
 function tone(freq: number, duration: number, type: OscillatorType, gain: number) {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  osc.connect(g);
+  g.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+  g.gain.setValueAtTime(gain, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
+// Same as tone(), but gated on the music mute instead — used only by the
+// marching bassline (see the file-level comment on why that's "music").
+function musicTone(freq: number, duration: number, type: OscillatorType, gain: number) {
+  if (isMusicMuted() || !audioCtx) return;
   const osc = audioCtx.createOscillator();
   const g = audioCtx.createGain();
   osc.type = type;
@@ -41,7 +65,7 @@ function tone(freq: number, duration: number, type: OscillatorType, gain: number
 // that second layer is what gives it some bite/sparkle right at the
 // start instead of reading as a single flat blip.
 function laserShot() {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
   const ctx = audioCtx;
   const now = ctx.currentTime;
   const duration = 0.14;
@@ -75,7 +99,7 @@ function laserShot() {
 }
 
 function noise(duration: number, gain: number) {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
   const ctx = audioCtx;
   const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -99,7 +123,7 @@ export const sfx = {
   invaderHit: () => noise(0.12, 0.2),
   ufoHit: () => tone(1200, 0.22, 'sawtooth', 0.15),
   playerHit: () => noise(0.45, 0.28),
-  march: (beat: number) => tone(MARCH_NOTES[beat % MARCH_NOTES.length], 0.1, 'square', 0.09),
+  march: (beat: number) => musicTone(MARCH_NOTES[beat % MARCH_NOTES.length], 0.1, 'square', 0.09),
   waveClear: () => tone(660, 0.3, 'triangle', 0.16),
   gameOver: () => tone(110, 0.6, 'sawtooth', 0.2),
 };

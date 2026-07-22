@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../../api/client';
 import { createInitialState, HEIGHT, update, WIDTH, type GameInput, type GameState } from './engine';
 import { render } from './render';
-import { ensureAudio, setThrust, sfx, stopThrust } from './sound';
+import { ensureAudio, setThrust, sfx, startMusic, stopMusic, stopThrust } from './sound';
 import styles from './Defender.module.scss';
 
 type Status = 'ready' | 'playing' | 'gameover';
@@ -101,6 +101,7 @@ export function Defender() {
     return () => {
       cancelAnimationFrame(raf);
       stopThrust();
+      stopMusic();
     };
   }, [status]);
 
@@ -138,6 +139,7 @@ export function Defender() {
 
   const startGame = useCallback(() => {
     ensureAudio();
+    startMusic();
     stateRef.current = createInitialState();
     elapsedMsRef.current = 0;
     inputRef.current = { left: false, right: false, up: false, down: false, fire: false, smartBomb: false };

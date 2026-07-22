@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../../api/client';
 import { render, WIDTH, HEIGHT } from './render';
-import { ensureAudio, sfx } from './sound';
+import { ensureAudio, sfx, startMusic, stopMusic } from './sound';
 import styles from './Frogger.module.scss';
 
 type Status = 'ready' | 'playing' | 'gameover';
@@ -127,7 +127,10 @@ export function Frogger() {
     }
 
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      stopMusic();
+    };
   }, [status, processTick, afterTick, handleEvents]);
 
   useEffect(() => {
@@ -166,6 +169,7 @@ export function Frogger() {
 
   const startGame = useCallback(() => {
     ensureAudio();
+    startMusic();
     stateRef.current = createInitialState();
     movesRef.current = [];
     lastTickRef.current = -1;

@@ -10,6 +10,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 import { api, ApiError } from '../../api/client';
+import { ensureAudio, sfx, startMusic, stopMusic } from './sound';
 import styles from './TicTacToe.module.scss';
 
 const HUMAN: Player = 'X';
@@ -51,6 +52,24 @@ export function TicTacToe() {
     reset();
   }, [mode, difficulty, reset]);
 
+  // Unlike the other games, there's no "Start" button gesture to hang
+  // ensureAudio() off — this board is playable the instant the page
+  // loads. The click that navigated here (a home-page tile, or a nav
+  // link) still counts as the page's user-activation gesture since this
+  // is a client-side route change, not a fresh page load, so starting
+  // the music on mount works in practice.
+  useEffect(() => {
+    ensureAudio();
+    startMusic();
+    return () => stopMusic();
+  }, []);
+
+  useEffect(() => {
+    if (result === null) return;
+    if (result === 'draw') sfx.draw();
+    else sfx.win();
+  }, [result]);
+
   useEffect(() => {
     if (result === null || submitted || mode !== 'ai' || moves.length === 0) return;
     setSubmitted(true);
@@ -73,6 +92,7 @@ export function TicTacToe() {
       setBoard(next);
       setMoves((m) => [...m, { index, player: AI }]);
       setTurn(HUMAN);
+      sfx.o();
     }, 400);
     return () => clearTimeout(timer);
   }, [board, turn, mode, difficulty, result]);
@@ -87,6 +107,8 @@ export function TicTacToe() {
     setBoard(next);
     setMoves((prev) => [...prev, { index, player }]);
     setTurn(player === 'X' ? 'O' : 'X');
+    if (player === 'X') sfx.x();
+    else sfx.o();
   }
 
   return (

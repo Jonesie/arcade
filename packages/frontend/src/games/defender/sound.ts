@@ -7,9 +7,15 @@
  * scream, the smart bomb), a two-layer "pew" for the laser (see
  * laserShot), and a persistent thrust drone that's ramped rather than
  * retriggered every frame, so holding a direction doesn't sound like a
- * machine gun of clicks.
+ * machine gun of clicks. Music and sound effects are muted independently
+ * (two separate cabinet buttons) — see ../../audio/musicMuteState and
+ * ../../audio/sfxMuteState. The original arcade didn't have a strong
+ * musical theme to draw on (it leaned entirely on effects), so the
+ * background loop below is an original urgent minor-key arpeggio rather
+ * than an attempt to reproduce anything specific.
  */
-import { isMuted } from '../../audio/muteState';
+import { isMusicMuted } from '../../audio/musicMuteState';
+import { isSfxMuted } from '../../audio/sfxMuteState';
 
 let audioCtx: AudioContext | null = null;
 
@@ -23,7 +29,7 @@ export function ensureAudio(): void {
 }
 
 function tone(freq: number, duration: number, type: OscillatorType, gain: number) {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
   const osc = audioCtx.createOscillator();
   const g = audioCtx.createGain();
   osc.type = type;
@@ -38,7 +44,7 @@ function tone(freq: number, duration: number, type: OscillatorType, gain: number
 }
 
 function sweep(freqFrom: number, freqTo: number, duration: number, type: OscillatorType, gain: number) {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
   const osc = audioCtx.createOscillator();
   const g = audioCtx.createGain();
   osc.type = type;
@@ -54,7 +60,7 @@ function sweep(freqFrom: number, freqTo: number, duration: number, type: Oscilla
 }
 
 function noise(duration: number, gain: number) {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
   const ctx = audioCtx;
   const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -76,7 +82,7 @@ function noise(duration: number, gain: number) {
 // that second layer is what gives it some bite/sparkle right at the
 // start instead of reading as a single flat blip.
 function laserShot() {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
   const ctx = audioCtx;
   const now = ctx.currentTime;
   const duration = 0.14;
@@ -138,13 +144,14 @@ export const sfx = {
 // direction key doesn't produce a click and holding it doesn't retrigger
 // anything. The oscillator itself is created once and left running at
 // zero gain between thrust bursts; only stopThrust() (on game end) tears
-// it down.
+// it down. Gated on the sfx mute (it's reactive to your own input, not
+// background music).
 let thrustOsc: OscillatorNode | null = null;
 let thrustGain: GainNode | null = null;
 
 export function setThrust(active: boolean): void {
   if (!audioCtx) return;
-  const shouldSound = active && !isMuted();
+  const shouldSound = active && !isSfxMuted();
 
   if (!thrustOsc) {
     thrustOsc = audioCtx.createOscillator();
@@ -168,5 +175,48 @@ export function stopThrust(): void {
     thrustGain?.disconnect();
     thrustOsc = null;
     thrustGain = null;
+  }
+}
+
+// Background music: an original urgent, minor-key arpeggio bouncing up
+// and down — self-rescheduling timeout, same pattern as Galaga/Asteroids,
+// gated on the music mute.
+const MUSIC_NOTES = [220, 262, 330, 262, 220, 196, 220, 262, 330, 392, 440, 392, 330, 262, 247, 220];
+const MUSIC_STEP_S = 0.13;
+
+let musicTimer: ReturnType<typeof setTimeout> | null = null;
+let musicStep = 0;
+
+function musicTone(freq: number, duration: number, type: OscillatorType, gain: number) {
+  if (isMusicMuted() || !audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  osc.connect(g);
+  g.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+  g.gain.setValueAtTime(gain, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
+function scheduleMusicStep() {
+  musicTone(MUSIC_NOTES[musicStep % MUSIC_NOTES.length], MUSIC_STEP_S * 0.85, 'sawtooth', 0.05);
+  musicStep += 1;
+  musicTimer = setTimeout(scheduleMusicStep, MUSIC_STEP_S * 1000);
+}
+
+export function startMusic(): void {
+  if (musicTimer) return;
+  musicStep = 0;
+  scheduleMusicStep();
+}
+
+export function stopMusic(): void {
+  if (musicTimer) {
+    clearTimeout(musicTimer);
+    musicTimer = null;
   }
 }

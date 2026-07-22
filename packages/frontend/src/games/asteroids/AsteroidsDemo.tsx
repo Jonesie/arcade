@@ -2,7 +2,7 @@ import styles from '../attract/DemoCanvas.module.scss';
 import { EngineDemo } from '../attract/EngineDemo';
 import { createInitialState, update, WIDTH, HEIGHT, type GameEvent, type GameInput, type GameState } from './engine';
 import { render } from './render';
-import { ensureAudio, sfx } from './sound';
+import { ensureAudio, sfx, startMusic, stopMusic } from './sound';
 
 // Rotate to face the nearest asteroid, thrust and fire once roughly
 // aimed. No collision-avoidance — getting clipped and restarting is fine
@@ -43,7 +43,11 @@ export function AsteroidsDemo() {
       computeInput={computeInput}
       isGameOver={(state) => state.gameOver}
       className={styles.canvas}
-      onStart={() => ensureAudio()}
+      onStart={() => {
+        ensureAudio();
+        startMusic();
+      }}
+      onStop={() => stopMusic()}
       onFrame={(_state, _input, events) => {
         for (const event of events as GameEvent[]) {
           switch (event.type) {

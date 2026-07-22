@@ -1,10 +1,12 @@
 /**
  * Synthesized with the Web Audio API, same reasoning as the other games'
  * sound modules: no binary audio assets, no risk of reproducing any
- * original recordings. Issue #14 only asked for shoot/explosion effects
- * (no music), so that's all this covers.
+ * original recordings. Music and sound effects are muted independently
+ * (two separate cabinet buttons) — see ../../audio/musicMuteState and
+ * ../../audio/sfxMuteState.
  */
-import { isMuted } from '../../audio/muteState';
+import { isMusicMuted } from '../../audio/musicMuteState';
+import { isSfxMuted } from '../../audio/sfxMuteState';
 
 let audioCtx: AudioContext | null = null;
 
@@ -18,7 +20,7 @@ export function ensureAudio(): void {
 }
 
 function tone(freq: number, duration: number, type: OscillatorType, gain: number) {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
   const osc = audioCtx.createOscillator();
   const g = audioCtx.createGain();
   osc.type = type;
@@ -33,7 +35,7 @@ function tone(freq: number, duration: number, type: OscillatorType, gain: number
 }
 
 function noise(duration: number, gain: number) {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
   const ctx = audioCtx;
   const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -55,7 +57,7 @@ function noise(duration: number, gain: number) {
 // that second layer is what gives it some bite/sparkle right at the
 // start instead of reading as a single flat blip.
 function laserShot() {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
   const ctx = audioCtx;
   const now = ctx.currentTime;
   const duration = 0.14;
@@ -94,3 +96,48 @@ export const sfx = {
   shipDestroyed: () => noise(0.55, 0.3),
   gameOver: () => tone(110, 0.6, 'sawtooth', 0.2),
 };
+
+// "Music" here, same as the real arcade cabinet, isn't a melody at all —
+// it's the iconic low two-note alternating heartbeat thump that runs
+// continuously under play. Self-rescheduling timeout, same pattern as
+// Galaga's arpeggio, gated on the music mute rather than sfx.
+const HEARTBEAT_STEP_S = 0.45;
+const HEARTBEAT_NOTES = [110, 82];
+
+let heartbeatTimer: ReturnType<typeof setTimeout> | null = null;
+let heartbeatStep = 0;
+
+function heartbeatThump(freq: number) {
+  if (isMusicMuted() || !audioCtx) return;
+  const ctx = audioCtx;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  osc.connect(g);
+  g.connect(ctx.destination);
+  const now = ctx.currentTime;
+  g.gain.setValueAtTime(0.24, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+  osc.start(now);
+  osc.stop(now + 0.18);
+}
+
+function scheduleHeartbeat() {
+  heartbeatThump(HEARTBEAT_NOTES[heartbeatStep % HEARTBEAT_NOTES.length]);
+  heartbeatStep += 1;
+  heartbeatTimer = setTimeout(scheduleHeartbeat, HEARTBEAT_STEP_S * 1000);
+}
+
+export function startMusic(): void {
+  if (heartbeatTimer) return;
+  heartbeatStep = 0;
+  scheduleHeartbeat();
+}
+
+export function stopMusic(): void {
+  if (heartbeatTimer) {
+    clearTimeout(heartbeatTimer);
+    heartbeatTimer = null;
+  }
+}

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../../api/client';
 import { createInitialState, HEIGHT, update, WIDTH, type GameInput, type GameState } from './engine';
 import { render } from './render';
-import { ensureAudio, sfx } from './sound';
+import { ensureAudio, sfx, startMusic, stopMusic } from './sound';
 import styles from './Asteroids.module.scss';
 
 type Status = 'ready' | 'playing' | 'gameover';
@@ -72,7 +72,10 @@ export function Asteroids() {
     }
 
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      stopMusic();
+    };
   }, [status]);
 
   useEffect(() => {
@@ -106,6 +109,7 @@ export function Asteroids() {
 
   const startGame = useCallback(() => {
     ensureAudio();
+    startMusic();
     stateRef.current = createInitialState();
     elapsedMsRef.current = 0;
     inputRef.current = { left: false, right: false, thrust: false, fire: false };

@@ -2,7 +2,7 @@ import styles from '../attract/DemoCanvas.module.scss';
 import { EngineDemo } from '../attract/EngineDemo';
 import { createInitialState, update, WIDTH, HEIGHT, WORLD_WIDTH, wrapDelta, type GameEvent, type GameInput, type GameState } from './engine';
 import { render } from './render';
-import { ensureAudio, setThrust, sfx, stopThrust } from './sound';
+import { ensureAudio, setThrust, sfx, startMusic, stopMusic, stopThrust } from './sound';
 
 // Fly toward whichever enemy is nearest (by shortest wraparound distance),
 // matching altitude, and fire once roughly on target. Never uses the
@@ -49,8 +49,14 @@ export function DefenderDemo() {
       computeInput={computeInput}
       isGameOver={(state) => state.gameOver}
       className={styles.canvas}
-      onStart={() => ensureAudio()}
-      onStop={() => stopThrust()}
+      onStart={() => {
+        ensureAudio();
+        startMusic();
+      }}
+      onStop={() => {
+        stopThrust();
+        stopMusic();
+      }}
       onFrame={(_state, input, events) => {
         setThrust(input.left || input.right || input.up || input.down);
         for (const event of events as GameEvent[]) {

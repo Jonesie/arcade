@@ -3,10 +3,12 @@
  * space-invaders/sound.ts: no binary audio assets, no risk of reproducing
  * the original game's actual recordings. Each game keeps its own small
  * sound module rather than sharing one, so games stay self-contained (see
- * doc/adding-a-game.md) — except mute itself, which is a site-wide cabinet
- * button rather than part of any one game's HUD (see ../../audio/muteState).
+ * doc/adding-a-game.md) — except mute itself, which is two site-wide
+ * cabinet buttons (music, sound effects) rather than part of any one
+ * game's HUD (see ../../audio/musicMuteState and ../../audio/sfxMuteState).
  */
-import { isMuted } from '../../audio/muteState';
+import { isMusicMuted } from '../../audio/musicMuteState';
+import { isSfxMuted } from '../../audio/sfxMuteState';
 
 let audioCtx: AudioContext | null = null;
 
@@ -20,7 +22,24 @@ export function ensureAudio(): void {
 }
 
 function tone(freq: number, duration: number, type: OscillatorType, gain: number) {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  osc.connect(g);
+  g.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+  g.gain.setValueAtTime(gain, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
+// Same as tone(), but gated on the music mute instead — used only by the
+// background arpeggio below.
+function musicTone(freq: number, duration: number, type: OscillatorType, gain: number) {
+  if (isMusicMuted() || !audioCtx) return;
   const osc = audioCtx.createOscillator();
   const g = audioCtx.createGain();
   osc.type = type;
@@ -35,7 +54,7 @@ function tone(freq: number, duration: number, type: OscillatorType, gain: number
 }
 
 function noise(duration: number, gain: number) {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
   const ctx = audioCtx;
   const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -57,7 +76,7 @@ function noise(duration: number, gain: number) {
 // that second layer is what gives it some bite/sparkle right at the
 // start instead of reading as a single flat blip.
 function laserShot() {
-  if (isMuted() || !audioCtx) return;
+  if (isSfxMuted() || !audioCtx) return;
   const ctx = audioCtx;
   const now = ctx.currentTime;
   const duration = 0.14;
@@ -104,9 +123,10 @@ export const sfx = {
 // the spirit of the arcade, not a reproduction of the real Galaga
 // soundtrack (which is copyrighted). Runs off a self-rescheduling timeout
 // rather than Web Audio's own clock, which is precise enough at this tempo
-// and much simpler than a lookahead scheduler. `tone()` already no-ops
-// while muted, so the scheduler just keeps ticking silently — toggling
-// sound back on resumes immediately without restarting the loop.
+// and much simpler than a lookahead scheduler. `musicTone()` already
+// no-ops while music is muted, so the scheduler just keeps ticking
+// silently — toggling music back on resumes immediately without
+// restarting the loop.
 const MUSIC_NOTES = [196, 233, 262, 233, 196, 175, 196, 233, 262, 311, 349, 311, 262, 233, 220, 196];
 const MUSIC_STEP_S = 0.15;
 
@@ -114,7 +134,7 @@ let musicTimer: ReturnType<typeof setTimeout> | null = null;
 let musicStep = 0;
 
 function scheduleMusicStep() {
-  tone(MUSIC_NOTES[musicStep % MUSIC_NOTES.length], MUSIC_STEP_S * 0.85, 'square', 0.045);
+  musicTone(MUSIC_NOTES[musicStep % MUSIC_NOTES.length], MUSIC_STEP_S * 0.85, 'square', 0.045);
   musicStep += 1;
   musicTimer = setTimeout(scheduleMusicStep, MUSIC_STEP_S * 1000);
 }

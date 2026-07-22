@@ -2,7 +2,7 @@ import { createInitialState, tickUpdate, TICK_MS, type Direction, type GameEvent
 import { useEffect, useRef } from 'react';
 import styles from '../attract/DemoCanvas.module.scss';
 import { render, WIDTH, HEIGHT } from './render';
-import { ensureAudio, sfx } from './sound';
+import { ensureAudio, sfx, startMusic, stopMusic } from './sound';
 
 // Candidates in priority order: prefer making progress, then dodging
 // sideways, then just holding position — tried in order, first one that
@@ -52,6 +52,7 @@ export function FroggerDemo() {
     let restartAt: number | null = null;
 
     ensureAudio();
+    startMusic();
 
     function handleEvents(events: GameEvent[]) {
       for (const event of events) {
@@ -104,7 +105,10 @@ export function FroggerDemo() {
     }
 
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      stopMusic();
+    };
   }, []);
 
   return <canvas ref={canvasRef} width={WIDTH} height={HEIGHT} className={styles.canvas} />;
