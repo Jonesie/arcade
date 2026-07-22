@@ -129,6 +129,7 @@ export function Cabinet({ children }: { children: ReactNode }) {
 
         <div className={styles.controlPanel}>
           {realMode && <Cigarette />}
+          <div className={styles.cigaretteBurn} aria-hidden="true" />
           <div className={styles.joystick} aria-hidden="true">
             <div className={styles.joystickBall} />
           </div>
