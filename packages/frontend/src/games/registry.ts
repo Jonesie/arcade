@@ -1,11 +1,13 @@
 import type { ComponentType } from 'react';
+import { Frogger } from './frogger/Frogger';
+import { FroggerIcon } from './frogger/FroggerIcon';
 import { Galaga } from './galaga/Galaga';
 import { GalagaIcon } from './galaga/GalagaIcon';
 import { SpaceInvaders } from './space-invaders/SpaceInvaders';
 import { SpaceInvadersIcon } from './space-invaders/SpaceInvadersIcon';
 import { TicTacToe } from './tic-tac-toe/TicTacToe';
 import { TicTacToeIcon } from './tic-tac-toe/TicTacToeIcon';
-import { DefenderIcon, FroggerIcon } from './upcoming/icons';
+import { DefenderIcon } from './upcoming/icons';
 
 export interface GameDefinition {
   slug: string;
@@ -50,6 +52,13 @@ export const games: GameDefinition[] = [
     icon: GalagaIcon,
     component: Galaga,
   },
+  {
+    slug: 'frogger',
+    name: 'Frogger',
+    description: 'Hop across traffic and a river without becoming roadkill.',
+    icon: FroggerIcon,
+    component: Frogger,
+  },
 ];
 
 export function getGame(slug: string): GameDefinition | undefined {
@@ -62,12 +71,6 @@ export function getGame(slug: string): GameDefinition | undefined {
  * own. Move an entry up into `games` once it's actually built.
  */
 export const upcomingGames: UpcomingGame[] = [
-  {
-    slug: 'frogger',
-    name: 'Frogger',
-    description: 'Hop across traffic and a river without becoming roadkill.',
-    icon: FroggerIcon,
-  },
   {
     slug: 'defender',
     name: 'Defender',

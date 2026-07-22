@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { db } from '../db/knex.js';
+import { validateFroggerSubmission } from '../games/frogger.js';
 import { validateGalagaSubmission } from '../games/galaga.js';
 import { validateSpaceInvadersSubmission } from '../games/spaceInvaders.js';
 import { validateTicTacToeSubmission } from '../games/ticTacToe.js';
@@ -107,4 +108,36 @@ scoresRouter.post('/galaga/scores', requireAuth, async (req, res) => {
   });
 
   res.status(201).json({ score: parsed.data.score, points: verdict.points });
+});
+
+const froggerMoveSchema = z.object({
+  tick: z.number().int().min(0),
+  dir: z.enum(['up', 'down', 'left', 'right']),
+});
+
+const froggerSubmissionSchema = z.object({
+  moves: z.array(froggerMoveSchema).max(5000),
+  finalTick: z.number().int().min(0),
+});
+
+// Note there's no `score` field in this schema at all — see
+// packages/backend/src/games/frogger.ts for why.
+scoresRouter.post('/frogger/scores', requireAuth, async (req, res) => {
+  const parsed = froggerSubmissionSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid submission' });
+    return;
+  }
+
+  const verdict = validateFroggerSubmission(parsed.data.moves, parsed.data.finalTick);
+  if (!verdict.valid) {
+    res.status(400).json({ error: verdict.reason });
+    return;
+  }
+
+  await insertScore(req.user!.id, 'frogger', verdict.score, verdict.points, {
+    moveCount: parsed.data.moves.length,
+  });
+
+  res.status(201).json({ score: verdict.score, points: verdict.points });
 });
