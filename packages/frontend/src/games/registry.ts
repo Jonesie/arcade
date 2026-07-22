@@ -7,7 +7,7 @@ import { SpaceInvaders } from './space-invaders/SpaceInvaders';
 import { SpaceInvadersIcon } from './space-invaders/SpaceInvadersIcon';
 import { TicTacToe } from './tic-tac-toe/TicTacToe';
 import { TicTacToeIcon } from './tic-tac-toe/TicTacToeIcon';
-import { DefenderIcon } from './upcoming/icons';
+import { AsteroidsIcon, DefenderIcon } from './upcoming/icons';
 
 export interface GameDefinition {
   slug: string;
@@ -76,5 +76,11 @@ export const upcomingGames: UpcomingGame[] = [
     name: 'Defender',
     description: 'Protect the ground. Watch the radar.',
     icon: DefenderIcon,
+  },
+  {
+    slug: 'asteroids',
+    name: 'Asteroids',
+    description: 'Blast rocks, dodge debris, watch your momentum.',
+    icon: AsteroidsIcon,
   },
 ];

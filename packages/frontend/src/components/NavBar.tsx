@@ -7,6 +7,7 @@ export function NavBar() {
 
   return (
     <nav className={styles.links}>
+      <Link to="/">Games</Link>
       <Link to="/leaderboard">Leaderboard</Link>
       {user ? (
         <>
