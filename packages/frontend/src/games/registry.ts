@@ -1,4 +1,6 @@
 import type { ComponentType } from 'react';
+import { Asteroids } from './asteroids/Asteroids';
+import { AsteroidsIcon } from './asteroids/AsteroidsIcon';
 import { Frogger } from './frogger/Frogger';
 import { FroggerIcon } from './frogger/FroggerIcon';
 import { Galaga } from './galaga/Galaga';
@@ -7,7 +9,7 @@ import { SpaceInvaders } from './space-invaders/SpaceInvaders';
 import { SpaceInvadersIcon } from './space-invaders/SpaceInvadersIcon';
 import { TicTacToe } from './tic-tac-toe/TicTacToe';
 import { TicTacToeIcon } from './tic-tac-toe/TicTacToeIcon';
-import { AsteroidsIcon, DefenderIcon } from './upcoming/icons';
+import { DefenderIcon } from './upcoming/icons';
 
 export interface GameDefinition {
   slug: string;
@@ -59,6 +61,13 @@ export const games: GameDefinition[] = [
     icon: FroggerIcon,
     component: Frogger,
   },
+  {
+    slug: 'asteroids',
+    name: 'Asteroids',
+    description: 'Blast rocks, dodge debris, watch your momentum.',
+    icon: AsteroidsIcon,
+    component: Asteroids,
+  },
 ];
 
 export function getGame(slug: string): GameDefinition | undefined {
@@ -76,11 +85,5 @@ export const upcomingGames: UpcomingGame[] = [
     name: 'Defender',
     description: 'Protect the ground. Watch the radar.',
     icon: DefenderIcon,
-  },
-  {
-    slug: 'asteroids',
-    name: 'Asteroids',
-    description: 'Blast rocks, dodge debris, watch your momentum.',
-    icon: AsteroidsIcon,
   },
 ];
