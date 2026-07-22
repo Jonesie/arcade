@@ -1,6 +1,6 @@
-// Styled after a classic arcade high-score screen: black background,
-// a blocky monospaced title, and a borderless table where every rank
-// gets its own color instead of one uniform theme.
+// Styled after a classic arcade high-score screen: a blocky monospaced
+// title and a borderless table where every rank gets its own color
+// instead of one uniform theme.
 .title {
   text-align: center;
   font-family: 'Courier New', ui-monospace, monospace;
@@ -34,7 +34,7 @@
 }
 
 .table {
-  background: #000;
+  background: var(--color-surface);
   border-radius: var(--radius);
   padding: 1rem 0;
   font-family: 'Courier New', ui-monospace, monospace;
