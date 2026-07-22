@@ -3,6 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { isMusicMuted, subscribeMusicMuted, toggleMusicMuted } from '../audio/musicMuteState';
 import { isSfxMuted, subscribeSfxMuted, toggleSfxMuted } from '../audio/sfxMuteState';
 import { getGame } from '../games/registry';
+import { Cigarette } from '../realMode/Cigarette';
+import { RealModeOverlay } from '../realMode/RealModeOverlay';
+import { isRealModeEnabled, subscribeRealMode, toggleRealMode } from '../realMode/realModeState';
+import { ensureAudio as ensureRealModeAudio } from '../realMode/sound';
 import { NavBar } from './NavBar';
 import styles from './Cabinet.module.scss';
 
@@ -17,6 +21,20 @@ function SpeakerIcon() {
       <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" />
       <path d="M16.2 8.5a5 5 0 0 1 0 7" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" />
       <path d="M18.3 6.3a8 8 0 0 1 0 11.4" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// A simple clenched-fist glyph for the Real Mode toggle (GitHub issue
+// #6's chosen icon) — same inline-SVG-with-currentColor approach as
+// SpeakerIcon above.
+function FistIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path
+        d="M7 10V8a2 2 0 0 1 4 0v-.5a1.5 1.5 0 0 1 3 0V8a1.5 1.5 0 0 1 3 0v1a1.5 1.5 0 0 1 3 0v4a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5v-2a2 2 0 0 1 2-2z"
+        fill="currentColor"
+      />
     </svg>
   );
 }
@@ -43,11 +61,13 @@ const MARQUEE_WORD_INTERVAL_MS = 3000;
  * above .screenContent, so it stays put on the fixed-height desktop layout
  * instead of scrolling away with the game itself. Most of the rest of the
  * cabinet (bezel screws, joystick, coin slot) is purely decorative
- * (aria-hidden, pointer-events: none) — except two control-panel buttons,
- * which are real site-wide mute toggles (blue = music, yellow = sound
- * effects; see ../audio/musicMuteState and ../audio/sfxMuteState) since
- * they're persistent chrome shown on every page, not owned by any one
- * game's HUD.
+ * (aria-hidden, pointer-events: none) — except three control-panel
+ * buttons: blue/yellow are real site-wide mute toggles (music, sound
+ * effects; see ../audio/musicMuteState and ../audio/sfxMuteState), and
+ * red is the "Real Mode" toggle (GitHub issue #6) — random arcade-chaos
+ * events layered over whatever game is on screen, see
+ * ../realMode/RealModeOverlay. All three are persistent chrome shown on
+ * every page, not owned by any one game's HUD.
  */
 export function Cabinet({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -59,6 +79,9 @@ export function Cabinet({ children }: { children: ReactNode }) {
 
   const [sfxMuted, setSfxMuted] = useState(isSfxMuted());
   useEffect(() => subscribeSfxMuted(setSfxMuted), []);
+
+  const [realMode, setRealMode] = useState(isRealModeEnabled());
+  useEffect(() => subscribeRealMode(setRealMode), []);
 
   const [wordIndex, setWordIndex] = useState(0);
   useEffect(() => {
@@ -98,15 +121,29 @@ export function Cabinet({ children }: { children: ReactNode }) {
           <div className={styles.screen}>
             {game && <h1 className={styles.screenHeader}>{game.name}</h1>}
             <div className={styles.screenContent}>{children}</div>
+            <RealModeOverlay />
           </div>
         </div>
 
-        <div className={styles.controlPanel} aria-hidden="true">
-          <div className={styles.joystick}>
+        <div className={styles.controlPanel}>
+          {realMode && <Cigarette />}
+          <div className={styles.joystick} aria-hidden="true">
             <div className={styles.joystickBall} />
           </div>
           <div className={styles.buttons}>
-            <div className={`${styles.arcadeBtn} ${styles.red}`} aria-hidden="true" />
+            <button
+              type="button"
+              className={`${styles.arcadeBtn} ${styles.red} ${styles.toggleBtn}`}
+              onClick={() => {
+                ensureRealModeAudio();
+                toggleRealMode();
+              }}
+              aria-pressed={realMode}
+              aria-label={realMode ? 'Turn Real Mode off' : 'Turn Real Mode on'}
+              title={realMode ? 'Turn Real Mode off' : 'Turn Real Mode on'}
+            >
+              <FistIcon />
+            </button>
             <button
               type="button"
               className={`${styles.arcadeBtn} ${styles.yellow} ${styles.toggleBtn}`}

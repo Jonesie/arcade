@@ -214,6 +214,7 @@
 }
 
 .controlPanel {
+  position: relative;
   background: linear-gradient(180deg, var(--cab-panel), var(--cab-black-2));
   border: 1px solid #382f20;
   border-top: 2px solid #4a3d26;
@@ -261,6 +262,11 @@
     inset 0 -3px 5px rgba(0, 0, 0, 0.35),
     inset 0 2px 3px rgba(255, 255, 255, 0.35);
 }
+// The compound `.arcadeBtn.<color>:hover` selectors below are needed
+// because the global `button:hover:not(:disabled)` rule (see
+// styles/global.scss) has higher specificity than a single `.red`/
+// `.yellow`/`.blue` class and would otherwise flash every arcade button
+// purple on hover instead of brightening its own color.
 .red {
   background: radial-gradient(circle at 38% 32%, #ff6b6b, #b3231f);
 }
@@ -268,6 +274,15 @@
   background: radial-gradient(circle at 38% 32%, #ffe07a, #d99a12);
 }
 .blue {
+  background: radial-gradient(circle at 38% 32%, #7fd0ff, #1a76b8);
+}
+.arcadeBtn.red:hover:not(:disabled) {
+  background: radial-gradient(circle at 38% 32%, #ff6b6b, #b3231f);
+}
+.arcadeBtn.yellow:hover:not(:disabled) {
+  background: radial-gradient(circle at 38% 32%, #ffe07a, #d99a12);
+}
+.arcadeBtn.blue:hover:not(:disabled) {
   background: radial-gradient(circle at 38% 32%, #7fd0ff, #1a76b8);
 }
 
@@ -476,16 +491,14 @@
   .root {
     padding: 0;
   }
-  // The control panel itself has to stay visible on mobile — the music
-  // and sound-effects buttons inside it are the only mute controls (see
-  // Cabinet.tsx), so unlike the rest of the cabinet, it can't just
-  // disappear. Only the genuinely decorative parts (joystick, the one
-  // non-functional red button) hide.
+  // The control panel itself has to stay visible on mobile — the music,
+  // sound-effects, and Real Mode buttons inside it are all real controls
+  // now (see Cabinet.tsx), so unlike the rest of the cabinet, it can't
+  // just disappear. Only the genuinely decorative joystick hides.
   .controlPanel {
     padding: 0.5rem;
   }
-  .joystick,
-  .red {
+  .joystick {
     display: none;
   }
   .cabinetBase {
