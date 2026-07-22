@@ -8,7 +8,8 @@ import styles from './Cabinet.module.scss';
 // Real photos of the actual Dog House (Christchurch), not committed to git —
 // see public/branding/README.md. One is picked at random per page load and
 // shown full-page, faded behind the cabinet.
-const BACKDROP_IMAGES = ['/branding/doghouse-1.jpg', '/branding/doghouse-2.jpg', '/branding/doghouse-3.jpg'];
+const BACKDROP_IMAGES = ['/branding/doghouse-2.jpg', '/branding/doghouse-3.jpg'];
+// '/branding/doghouse-1.jpg', has a person in it, so it's not suitable for a backdrop.
 
 /**
  * Decorative 1980s-arcade-cabinet chrome around the real site. The neon
