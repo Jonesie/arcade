@@ -1,4 +1,4 @@
-import { COLS, HOME_ROW, HOME_SLOT_COLS, isObstacleAt, laneAt, ROWS, type GameState } from '@arcade/shared';
+import { COLS, effectiveStep, HOME_ROW, HOME_SLOT_COLS, laneAt, ROWS, type GameState, type LaneConfig } from '@arcade/shared';
 
 export const CELL = 32;
 export const WIDTH = COLS * CELL;
@@ -11,6 +11,14 @@ const HOME_COLOR = '#12321a';
 const CAR_COLORS = ['#e5533d', '#e0a72a', '#9b59c8'];
 const LOG_COLOR = '#6b4423';
 
+/**
+ * `tick` may be fractional — the caller passes real elapsed-time-derived
+ * progress through the current tick so cars/logs slide continuously
+ * between simulation steps instead of jumping. The interpolation always
+ * resolves to the exact discrete position at each integer tick boundary
+ * (see laneVisualShift), so it never drifts out of sync with the
+ * collision logic in tickUpdate, which only ever runs on integer ticks.
+ */
 export function render(canvas: HTMLCanvasElement | null, state: GameState, tick: number): void {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -47,11 +55,7 @@ export function render(canvas: HTMLCanvasElement | null, state: GameState, tick:
     const lane = laneAt(row);
     if (!lane) continue;
     ctx.fillStyle = lane.kind === 'road' ? CAR_COLORS[row % CAR_COLORS.length] : LOG_COLOR;
-    for (let col = 0; col < COLS; col++) {
-      if (isObstacleAt(lane, col, tick, state.level)) {
-        ctx.fillRect(col * CELL, row * CELL + 3, CELL, CELL - 6);
-      }
-    }
+    drawLaneObstacles(ctx, lane, tick, state.level, row);
   }
 
   const x = state.frogCol * CELL;
@@ -65,4 +69,35 @@ export function render(canvas: HTMLCanvasElement | null, state: GameState, tick:
   ctx.arc(x + CELL / 2 - 6, y + CELL / 2 - 5, 2.4, 0, Math.PI * 2);
   ctx.arc(x + CELL / 2 + 6, y + CELL / 2 - 5, 2.4, 0, Math.PI * 2);
   ctx.fill();
+}
+
+/**
+ * The sim advances a lane's obstacle pattern by one whole cell every
+ * `step` ticks (see effectiveStep/isObstacleAt in @arcade/shared), so
+ * drawn as-is that's a snap every `step` ticks. This instead renders at
+ * the lane's average continuous rate (shift grows linearly with `tick`
+ * rather than jumping), which is purely cosmetic — tickUpdate still
+ * resolves all collisions from the discrete per-tick state, so this
+ * never changes what the frog can survive, only how the obstacle looks
+ * while it does it.
+ */
+function laneVisualShift(lane: LaneConfig, tick: number, level: number): number {
+  return (tick / effectiveStep(lane, level)) * lane.dir;
+}
+
+function drawLaneObstacles(ctx: CanvasRenderingContext2D, lane: LaneConfig, tick: number, level: number, row: number): void {
+  const len = lane.patternLen;
+  const shift = laneVisualShift(lane, tick, level);
+  const shiftMod = ((shift % len) + len) % len;
+  const y = row * CELL + 3;
+  const h = CELL - 6;
+  const mMax = Math.ceil(COLS / len) + 1;
+  for (let i = 0; i < len; i++) {
+    if (!lane.pattern[i]) continue;
+    for (let m = -1; m <= mMax; m++) {
+      const left = (i + shiftMod + m * len) * CELL;
+      if (left < -CELL || left > WIDTH) continue;
+      ctx.fillRect(left, y, CELL, h);
+    }
+  }
 }

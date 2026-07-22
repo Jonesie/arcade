@@ -74,11 +74,11 @@ export function Frogger() {
     return events;
   }, []);
 
-  const afterTick = useCallback((tick: number) => {
+  const afterTick = useCallback((tick: number, displayTick = tick) => {
     setScore(stateRef.current.score);
     setLives(stateRef.current.lives);
     setLevel(stateRef.current.level);
-    render(canvasRef.current, stateRef.current, tick);
+    render(canvasRef.current, stateRef.current, displayTick);
     if (stateRef.current.gameOver && !gameOverHandledRef.current) {
       gameOverHandledRef.current = true;
       setFinalResult({ moves: movesRef.current.slice(), finalTick: lastTickRef.current });
@@ -98,7 +98,9 @@ export function Frogger() {
         const events = processTick(currentTick);
         handleEvents(events);
       }
-      afterTick(currentTick);
+      // Cars/logs are drawn at this fractional tick (see render.ts) so they
+      // glide continuously between the discrete simulation steps above.
+      afterTick(currentTick, elapsed / TICK_MS);
       if (stateRef.current.gameOver) return;
       raf = requestAnimationFrame(loop);
     }
