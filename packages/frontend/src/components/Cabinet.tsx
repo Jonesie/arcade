@@ -170,15 +170,21 @@ export function Cabinet({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <div className={styles.cabinetBase} aria-hidden="true">
-          <div className={styles.coinUnit}>
+        <div className={styles.cabinetBase}>
+          <a
+            className={styles.coinUnit}
+            href="https://www.buymeacoffee.com/jonesie"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Buy me a coffee"
+          >
             <div className={styles.coinSlot}>
               <div className={styles.coinSlotWindow}>
                 <div className={styles.coinSlotLine} />
               </div>
             </div>
             <span className={styles.coinLabel}>Insert coin</span>
-          </div>
+          </a>
         </div>
       </div>
     </div>
