@@ -1,4 +1,4 @@
-import { createInitialState, tickUpdate, TICK_MS, type Direction, type FroggerMove, type GameEvent, type GameState } from '@arcade/shared';
+import { CENTER_COL, createInitialState, tickUpdate, TICK_MS, type Direction, type FroggerMove, type GameEvent, type GameState } from '@arcade/shared';
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../../api/client';
@@ -7,6 +7,11 @@ import { ensureAudio, sfx } from './sound';
 import styles from './Frogger.module.scss';
 
 type Status = 'ready' | 'playing' | 'gameover';
+
+// How long the frog's sprite takes to slide to a new column when it hops
+// left/right or drifts with a log — shorter than TICK_MS so it settles
+// before the next tick usually arrives, rather than lagging behind input.
+const FROG_COL_ANIM_MS = 110;
 
 interface ScoreResponse {
   score: number;
@@ -26,6 +31,8 @@ export function Frogger() {
   const startTimeRef = useRef(0);
   const gameOverHandledRef = useRef(false);
   const statusRef = useRef<Status>('ready');
+  const lastFrogColRef = useRef(CENTER_COL);
+  const frogColAnimRef = useRef({ from: CENTER_COL, to: CENTER_COL, start: 0 });
 
   const [status, setStatus] = useState<Status>('ready');
   const [score, setScore] = useState(0);
@@ -78,7 +85,21 @@ export function Frogger() {
     setScore(stateRef.current.score);
     setLives(stateRef.current.lives);
     setLevel(stateRef.current.level);
-    render(canvasRef.current, stateRef.current, displayTick);
+
+    // Whenever the frog's column actually changes (a hop, or the passive
+    // river-current drift), start a short slide from where it was to where
+    // it is now instead of snapping — state.frogCol itself is untouched,
+    // this only affects what render() draws.
+    const col = stateRef.current.frogCol;
+    if (col !== lastFrogColRef.current) {
+      frogColAnimRef.current = { from: lastFrogColRef.current, to: col, start: performance.now() };
+      lastFrogColRef.current = col;
+    }
+    const { from, to, start } = frogColAnimRef.current;
+    const progress = from === to ? 1 : Math.min(1, (performance.now() - start) / FROG_COL_ANIM_MS);
+    const visualFrogCol = from + (to - from) * progress;
+
+    render(canvasRef.current, stateRef.current, displayTick, visualFrogCol);
     if (stateRef.current.gameOver && !gameOverHandledRef.current) {
       gameOverHandledRef.current = true;
       setFinalResult({ moves: movesRef.current.slice(), finalTick: lastTickRef.current });
@@ -149,6 +170,8 @@ export function Frogger() {
     movesRef.current = [];
     lastTickRef.current = -1;
     gameOverHandledRef.current = false;
+    lastFrogColRef.current = CENTER_COL;
+    frogColAnimRef.current = { from: CENTER_COL, to: CENTER_COL, start: 0 };
     startTimeRef.current = performance.now();
     setScore(0);
     setLives(3);

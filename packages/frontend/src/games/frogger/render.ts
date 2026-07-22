@@ -19,7 +19,14 @@ const LOG_COLOR = '#6b4423';
  * (see laneVisualShift), so it never drifts out of sync with the
  * collision logic in tickUpdate, which only ever runs on integer ticks.
  */
-export function render(canvas: HTMLCanvasElement | null, state: GameState, tick: number): void {
+/**
+ * `frogCol` defaults to the frog's exact discrete column, but the caller
+ * may pass an eased in-between value (see Frogger.tsx's frogColAnimRef) so
+ * left/right movement — hops and the passive river-current drift — slides
+ * rather than snapping. Purely cosmetic: `state.frogCol` (used for
+ * collisions and the home-slot check) is never touched by this.
+ */
+export function render(canvas: HTMLCanvasElement | null, state: GameState, tick: number, frogCol: number = state.frogCol): void {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -58,7 +65,7 @@ export function render(canvas: HTMLCanvasElement | null, state: GameState, tick:
     drawLaneObstacles(ctx, lane, tick, state.level, row);
   }
 
-  const x = state.frogCol * CELL;
+  const x = frogCol * CELL;
   const y = state.frogRow * CELL;
   ctx.fillStyle = '#5cf27a';
   ctx.beginPath();
