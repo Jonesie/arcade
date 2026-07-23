@@ -5,30 +5,14 @@
  * control for it (a cabinet button, see Cabinet.tsx) is persistent chrome
  * shown on every page, not part of any one game's HUD. Each game's
  * sound.ts reads `isMusicMuted()` before starting/continuing its music
- * loop, instead of keeping its own independent enabled flag.
+ * loop, instead of keeping its own independent enabled flag. Persisted
+ * across refreshes (GitHub issue #17) — see ../state/persistedToggle.
  */
+import { createPersistedToggle } from '../state/persistedToggle';
 
-type Listener = (muted: boolean) => void;
+const musicMuted = createPersistedToggle('arcade.musicMuted', false);
 
-let muted = false;
-const listeners = new Set<Listener>();
-
-export function isMusicMuted(): boolean {
-  return muted;
-}
-
-export function setMusicMuted(value: boolean): void {
-  if (muted === value) return;
-  muted = value;
-  for (const listener of listeners) listener(muted);
-}
-
-export function toggleMusicMuted(): boolean {
-  setMusicMuted(!muted);
-  return muted;
-}
-
-export function subscribeMusicMuted(listener: Listener): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const isMusicMuted = musicMuted.get;
+export const setMusicMuted = musicMuted.set;
+export const toggleMusicMuted = musicMuted.toggle;
+export const subscribeMusicMuted = musicMuted.subscribe;

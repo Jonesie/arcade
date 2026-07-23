@@ -5,30 +5,14 @@
  * the same reason as musicMuteState.ts: the control for it (a cabinet
  * button, see Cabinet.tsx) is persistent chrome shown on every page, not
  * part of any one game's HUD. Each game's sound.ts reads `isSfxMuted()`
- * before playing a one-shot effect.
+ * before playing a one-shot effect. Persisted across refreshes (GitHub
+ * issue #17) — see ../state/persistedToggle.
  */
+import { createPersistedToggle } from '../state/persistedToggle';
 
-type Listener = (muted: boolean) => void;
+const sfxMuted = createPersistedToggle('arcade.sfxMuted', false);
 
-let muted = false;
-const listeners = new Set<Listener>();
-
-export function isSfxMuted(): boolean {
-  return muted;
-}
-
-export function setSfxMuted(value: boolean): void {
-  if (muted === value) return;
-  muted = value;
-  for (const listener of listeners) listener(muted);
-}
-
-export function toggleSfxMuted(): boolean {
-  setSfxMuted(!muted);
-  return muted;
-}
-
-export function subscribeSfxMuted(listener: Listener): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const isSfxMuted = sfxMuted.get;
+export const setSfxMuted = sfxMuted.set;
+export const toggleSfxMuted = sfxMuted.toggle;
+export const subscribeSfxMuted = sfxMuted.subscribe;
