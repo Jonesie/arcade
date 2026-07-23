@@ -21,32 +21,36 @@ export const FAR_Z = 3200;
 const NEAR_Z = 60;
 export const FOCAL = 260;
 
-const PLAYER_MOVE_SPEED = 190;
+const PLAYER_MOVE_SPEED = 220;
 const FIRE_COOLDOWN_S = 0.16;
 const SHOT_SPEED = 2400;
-const HIT_RADIUS = 26;
+// Split so tuning one doesn't fight the other: how close a bolt/turret
+// needs to be to actually hurt the player vs. how forgiving the
+// player's own aim is when shooting at a turret.
+const PLAYER_HIT_RADIUS = 20;
+const AIM_TOLERANCE = 34;
 const SHOT_CROSS_TOLERANCE = 90;
 
 const FORWARD_SPEED_BASE = 820;
 const FORWARD_SPEED_PER_LEVEL = 55;
 const FORWARD_SPEED_MAX = 1300;
 
-const TURRET_SPAWN_INTERVAL_BASE = 1.05;
-const TURRET_SPAWN_INTERVAL_MIN = 0.55;
+const TURRET_SPAWN_INTERVAL_BASE = 1.3;
+const TURRET_SPAWN_INTERVAL_MIN = 0.75;
 const TURRET_SPAWN_INTERVAL_PER_LEVEL = 0.06;
-const MAX_TURRETS = 10;
+const MAX_TURRETS = 7;
 const TURRET_FIRE_MIN_Z = 500;
 const TURRET_FIRE_MAX_Z = 2200;
-const TURRET_FIRE_PROBABILITY = 0.5;
+const TURRET_FIRE_PROBABILITY = 0.35;
 const BOLT_SPEED_BASE = 1500;
 const BOLT_SPEED_PER_LEVEL = 40;
 
 const SHIELD_MAX = 100;
-const HIT_DAMAGE = 26;
+const HIT_DAMAGE = 16;
 
 export const TRENCH_LENGTH = 14000;
 export const PORT_WINDOW = 1300;
-export const PORT_RADIUS = 34;
+export const PORT_RADIUS = 42;
 
 const TURRET_POINTS = 80;
 const PORT_HIT_BONUS = 1500;
@@ -236,7 +240,7 @@ function updateTurretsAndBolts(state: GameState, dt: number, events: GameEvent[]
   const survivedTurrets: Turret[] = [];
   for (const turret of state.turrets) {
     if (turret.z <= NEAR_Z) {
-      if (Math.hypot(turret.x - state.player.x, turret.y - state.player.y) < HIT_RADIUS) {
+      if (Math.hypot(turret.x - state.player.x, turret.y - state.player.y) < PLAYER_HIT_RADIUS) {
         applyHit(state, events);
       }
       continue;
@@ -250,7 +254,7 @@ function updateTurretsAndBolts(state: GameState, dt: number, events: GameEvent[]
   const survivedBolts: Bolt[] = [];
   for (const bolt of state.bolts) {
     if (bolt.z <= NEAR_Z) {
-      if (Math.hypot(bolt.x - state.player.x, bolt.y - state.player.y) < HIT_RADIUS) {
+      if (Math.hypot(bolt.x - state.player.x, bolt.y - state.player.y) < PLAYER_HIT_RADIUS) {
         applyHit(state, events);
       }
       continue;
@@ -283,7 +287,7 @@ function updateShots(state: GameState, dt: number, events: GameEvent[]): void {
     for (const turret of state.turrets) {
       if (destroyedTurretIds.has(turret.id)) continue;
       if (shot.z < turret.z || shot.z - turret.z > SHOT_CROSS_TOLERANCE) continue;
-      if (Math.abs(shot.x - turret.x) > HIT_RADIUS || Math.abs(shot.y - turret.y) > HIT_RADIUS) continue;
+      if (Math.abs(shot.x - turret.x) > AIM_TOLERANCE || Math.abs(shot.y - turret.y) > AIM_TOLERANCE) continue;
       destroyedTurretIds.add(turret.id);
       spentShotIds.add(shot.id);
       state.score += TURRET_POINTS;
