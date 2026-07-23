@@ -25,16 +25,22 @@ function SpeakerIcon() {
   );
 }
 
-// A simple clenched-fist glyph for the Real Mode toggle (GitHub issue
-// #6's chosen icon) — same inline-SVG-with-currentColor approach as
-// SpeakerIcon above.
+// A clenched-fist glyph for the Real Mode toggle (GitHub issue #6's
+// chosen icon) — same inline-SVG-with-currentColor approach as
+// SpeakerIcon above. Built from separate blocks (four knuckles + thumb
+// + palm/wrist) with real gaps between them, rather than one smooth
+// blob path, so the shape stays legible at the button's small size
+// instead of reading as an undifferentiated dark circle.
 function FistIcon() {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-      <path
-        d="M7 10V8a2 2 0 0 1 4 0v-.5a1.5 1.5 0 0 1 3 0V8a1.5 1.5 0 0 1 3 0v1a1.5 1.5 0 0 1 3 0v4a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5v-2a2 2 0 0 1 2-2z"
-        fill="currentColor"
-      />
+      <rect x="6.8" y="7" width="2.2" height="6.5" rx="1" fill="currentColor" />
+      <rect x="9.6" y="6" width="2.2" height="7.5" rx="1" fill="currentColor" />
+      <rect x="12.4" y="6" width="2.2" height="7.5" rx="1" fill="currentColor" />
+      <rect x="15.2" y="7" width="2.2" height="6.5" rx="1" fill="currentColor" />
+      <rect x="6.5" y="12.5" width="11" height="5.5" rx="1.5" fill="currentColor" />
+      <rect x="3.5" y="11" width="4" height="5" rx="1.5" fill="currentColor" />
+      <rect x="9" y="17" width="6" height="4" rx="1" fill="currentColor" />
     </svg>
   );
 }
