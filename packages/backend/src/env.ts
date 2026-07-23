@@ -40,6 +40,9 @@ export const env = {
   SMTP_PASSWORD: process.env.SMTP_PASSWORD ?? '',
   MAIL_FROM_NAME: process.env.MAIL_FROM_NAME ?? 'The Dog House',
   MAIL_FROM_ADDRESS: process.env.MAIL_FROM_ADDRESS ?? 'noreply@arcade.jonesie.net.nz',
+  // Used to build absolute links in emails (e.g. "go to your profile") —
+  // same convention as ~/dev/lorna's PUBLIC_BASE_URL.
+  PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL ?? 'http://localhost:5173',
 
   // Comma-separated list of email addresses treated as admins (GitHub
   // issue #12) — an account counts as admin only once that same address

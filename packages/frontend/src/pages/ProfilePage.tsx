@@ -1,15 +1,47 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import styles from './Form.module.scss';
 
 export function ProfilePage() {
   const { user, addEmail, verifyEmail, resendVerification, setSubscribed } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(() => searchParams.get('verify') ?? '');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const autoVerifyAttempted = useRef(false);
+
+  // The verification email's "Verify email" button links straight to
+  // /profile?verify=CODE so clicking it confirms the address without
+  // needing to copy/paste the code by hand. Falls back to the manual
+  // form below (which the code is also pre-filled into) if this fails —
+  // e.g. the link was opened somewhere not logged in as this account.
+  useEffect(() => {
+    const paramCode = searchParams.get('verify');
+    if (!paramCode || autoVerifyAttempted.current || !user || user.emailVerified) return;
+    autoVerifyAttempted.current = true;
+    setSubmitting(true);
+    verifyEmail(paramCode)
+      .then(() => setNotice('Email verified!'))
+      .catch((err: unknown) => setError(err instanceof ApiError ? err.message : 'Could not verify code'))
+      .finally(() => {
+        setSubmitting(false);
+        setSearchParams(
+          (prev) => {
+            const next = new URLSearchParams(prev);
+            next.delete('verify');
+            return next;
+          },
+          { replace: true },
+        );
+      });
+    // Runs once on mount to consume the one-time `verify` query param —
+    // deliberately not re-running as user/searchParams change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // The route this page is mounted on is already wrapped in RequireAuth.
   if (!user) return null;

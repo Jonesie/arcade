@@ -1,5 +1,5 @@
 import { db } from '../db/knex.js';
-import { sendEmail, verificationEmailBody } from './mailer.js';
+import { sendEmail, verificationEmailContent } from './mailer.js';
 
 const CODE_EXPIRY_MS = 15 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
@@ -19,7 +19,7 @@ export async function issueVerificationCode(userId: number, email: string): Prom
       EmailVerificationExpiresAt: new Date(now.getTime() + CODE_EXPIRY_MS),
       EmailVerificationSentAt: now,
     });
-  await sendEmail(email, 'Verify your email — The Dog House', verificationEmailBody(code));
+  await sendEmail(email, 'Verify your email — The Dog House', verificationEmailContent(code));
 }
 
 export type ResendVerdict = { ok: true } | { ok: false; reason: string };
