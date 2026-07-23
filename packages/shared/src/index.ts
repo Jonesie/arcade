@@ -4,3 +4,4 @@ export * from './galaga.js';
 export * from './frogger.js';
 export * from './asteroids.js';
 export * from './defender.js';
+export * from './donkeyKong.js';

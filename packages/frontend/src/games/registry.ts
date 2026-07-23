@@ -5,6 +5,9 @@ import { AsteroidsIcon } from './asteroids/AsteroidsIcon';
 import { Defender } from './defender/Defender';
 import { DefenderDemo } from './defender/DefenderDemo';
 import { DefenderIcon } from './defender/DefenderIcon';
+import { DonkeyKong } from './donkey-kong/DonkeyKong';
+import { DonkeyKongDemo } from './donkey-kong/DonkeyKongDemo';
+import { DonkeyKongIcon } from './donkey-kong/DonkeyKongIcon';
 import { Frogger } from './frogger/Frogger';
 import { FroggerDemo } from './frogger/FroggerDemo';
 import { FroggerIcon } from './frogger/FroggerIcon';
@@ -17,7 +20,7 @@ import { SpaceInvadersIcon } from './space-invaders/SpaceInvadersIcon';
 import { TicTacToe } from './tic-tac-toe/TicTacToe';
 import { TicTacToeDemo } from './tic-tac-toe/TicTacToeDemo';
 import { TicTacToeIcon } from './tic-tac-toe/TicTacToeIcon';
-import { DonkeyKongIcon, StarWarsIcon } from './upcoming/icons';
+import { StarWarsIcon } from './upcoming/icons';
 
 export interface GameDefinition {
   slug: string;
@@ -94,6 +97,14 @@ export const games: GameDefinition[] = [
     component: Defender,
     demo: DefenderDemo,
   },
+  {
+    slug: 'donkey-kong',
+    name: 'Donkey Kong',
+    description: 'Climb girders and ladders to the top, dodging barrels rolling down from above.',
+    icon: DonkeyKongIcon,
+    component: DonkeyKong,
+    demo: DonkeyKongDemo,
+  },
 ];
 
 export function getGame(slug: string): GameDefinition | undefined {
@@ -106,12 +117,6 @@ export function getGame(slug: string): GameDefinition | undefined {
  * own. Move an entry up into `games` once it's actually built.
  */
 export const upcomingGames: UpcomingGame[] = [
-  {
-    slug: 'donkey-kong',
-    name: 'Donkey Kong',
-    description: 'Climb girders and ladders to the top, dodging barrels rolling down from above.',
-    icon: DonkeyKongIcon,
-  },
   {
     slug: 'star-wars',
     name: 'Star Wars',

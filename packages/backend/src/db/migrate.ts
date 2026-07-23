@@ -91,6 +91,7 @@ async function migrate() {
     { Slug: 'frogger', Name: 'Frogger' },
     { Slug: 'asteroids', Name: 'Asteroids' },
     { Slug: 'defender', Name: 'Defender' },
+    { Slug: 'donkey-kong', Name: 'Donkey Kong' },
   ];
   for (const game of seedGames) {
     const existing = await db('Games').where({ Slug: game.Slug }).first();
