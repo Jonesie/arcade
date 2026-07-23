@@ -16,6 +16,17 @@ export type GameResult = Player | 'draw' | null;
 export interface Move {
   index: number;
   player: Player;
+  /**
+   * Speed Mode only (GitHub issue #10): how long this move's player spent
+   * on their turn, in ms — 0 for every move made outside Speed Mode, and
+   * always 0 for the very first move of a game (the chess-clock-style
+   * per-player timers don't start until that first move is made, so
+   * there's nothing to have timed yet). Self-reported by the client, same
+   * deliberately lower-trust v1 as the other real-time games' elapsedMs
+   * (see backend/src/games/spaceInvaders.ts) — the replay only verifies
+   * move legality, not wall-clock time.
+   */
+  elapsedMs?: number;
 }
 
 const WIN_LINES: readonly (readonly [number, number, number])[] = [
@@ -160,4 +171,29 @@ const POINTS: Record<Difficulty, Record<Outcome, number>> = {
 
 export function pointsFor(difficulty: Difficulty, outcome: Outcome): number {
   return POINTS[difficulty][outcome];
+}
+
+/** Sums a player's own per-move `elapsedMs` (Speed Mode's chess-clock timings) across a move list. */
+export function sumPlayerElapsedMs(moves: Move[], player: Player): number {
+  return moves.reduce((total, move) => (move.player === player ? total + (move.elapsedMs ?? 0) : total), 0);
+}
+
+// Speed Mode scoring (GitHub issue #10): "lower time = higher score for
+// win and higher time = negative points on lose" — layered on top of the
+// normal per-difficulty points rather than replacing them for a win, but
+// fully replacing the (always-zero) loss points with a time-scaled penalty.
+const SPEED_WIN_BONUS_MAX = 20;
+const SPEED_WIN_BONUS_DECAY_PER_S = 1;
+const SPEED_LOSS_PENALTY_PER_S = 1;
+const SPEED_LOSS_PENALTY_MAX = 50;
+
+export function pointsForSpeed(difficulty: Difficulty, outcome: Outcome, humanElapsedMs: number): number {
+  const seconds = Math.max(0, humanElapsedMs) / 1000;
+  if (outcome === 'draw') return pointsFor(difficulty, outcome);
+  if (outcome === 'win') {
+    const bonus = Math.max(0, Math.round(SPEED_WIN_BONUS_MAX - seconds * SPEED_WIN_BONUS_DECAY_PER_S));
+    return pointsFor(difficulty, outcome) + bonus;
+  }
+  const penalty = Math.min(SPEED_LOSS_PENALTY_MAX, Math.round(seconds * SPEED_LOSS_PENALTY_PER_S));
+  return -penalty;
 }

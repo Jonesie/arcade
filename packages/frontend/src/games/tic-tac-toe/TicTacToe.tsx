@@ -34,6 +34,10 @@ function randomMarkColors(): Record<Player, string> {
   return { X: `hsl(${hue1}, 85%, 60%)`, O: `hsl(${hue2}, 85%, 60%)` };
 }
 
+function formatSeconds(ms: number): string {
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
 export function TicTacToe() {
   const { user } = useAuth();
   const [mode, setMode] = useState<Mode>('ai');
@@ -44,14 +48,27 @@ export function TicTacToe() {
   const [submitted, setSubmitted] = useState(false);
   const [markColors, setMarkColors] = useState(randomMarkColors);
 
+  // Speed Mode (GitHub issue #10): a chess-clock-style timer per player.
+  // Nothing runs before the first move; that move is what starts the
+  // *other* player's clock, which then stops (crediting its holder) and
+  // hands off every time a move is made, until the game ends.
+  const [speedMode, setSpeedMode] = useState(false);
+  const [xElapsedMs, setXElapsedMs] = useState(0);
+  const [oElapsedMs, setOElapsedMs] = useState(0);
+  const [turnStartedAt, setTurnStartedAt] = useState<number | null>(null);
+  const [liveNow, setLiveNow] = useState(() => Date.now());
+
   const result = getResult(board);
   // "You" is only meaningful vs. the computer, where the human is always X.
   const humanLost = mode === 'ai' && result === AI;
   const isWin = result !== null && result !== 'draw';
   const showCelebration = isWin && !humanLost;
 
+  const xDisplayMs = xElapsedMs + (turnStartedAt !== null && turn === 'X' ? liveNow - turnStartedAt : 0);
+  const oDisplayMs = oElapsedMs + (turnStartedAt !== null && turn === 'O' ? liveNow - turnStartedAt : 0);
+
   const submitMutation = useMutation({
-    mutationFn: (payload: { difficulty: Difficulty; moves: Move[] }) =>
+    mutationFn: (payload: { difficulty: Difficulty; moves: Move[]; speedMode: boolean }) =>
       api.post<ScoreResponse>('/games/tic-tac-toe/scores', payload),
   });
 
@@ -61,6 +78,9 @@ export function TicTacToe() {
     setTurn('X');
     setSubmitted(false);
     setMarkColors(randomMarkColors());
+    setXElapsedMs(0);
+    setOElapsedMs(0);
+    setTurnStartedAt(null);
     submitMutation.reset();
     // submitMutation identity changes every render; only reset on mode/difficulty switches or explicit restart.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -68,7 +88,15 @@ export function TicTacToe() {
 
   useEffect(() => {
     reset();
-  }, [mode, difficulty, reset]);
+  }, [mode, difficulty, speedMode, reset]);
+
+  // Live-updates the ticking player's on-screen time. Only runs while
+  // Speed Mode is on, a clock is actually running, and the game isn't over.
+  useEffect(() => {
+    if (!speedMode || turnStartedAt === null || result !== null) return undefined;
+    const id = setInterval(() => setLiveNow(Date.now()), 100);
+    return () => clearInterval(id);
+  }, [speedMode, turnStartedAt, result]);
 
   // Unlike the other games, there's no "Start" button gesture to hang
   // ensureAudio() off — this board is playable the instant the page
@@ -95,8 +123,8 @@ export function TicTacToe() {
   useEffect(() => {
     if (result === null || submitted || mode !== 'ai' || moves.length === 0) return;
     setSubmitted(true);
-    submitMutation.mutate({ difficulty, moves });
-    // Runs once per finished game; moves/difficulty/submitMutation intentionally excluded.
+    submitMutation.mutate({ difficulty, moves, speedMode });
+    // Runs once per finished game; moves/difficulty/speedMode/submitMutation intentionally excluded.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result]);
 
@@ -111,13 +139,21 @@ export function TicTacToe() {
       const index = bestMove(board, AI, difficulty);
       const next = board.slice();
       next[index] = AI;
+
+      let elapsedMs = 0;
+      if (speedMode && turnStartedAt !== null) {
+        elapsedMs = Date.now() - turnStartedAt;
+        setOElapsedMs((v) => v + elapsedMs);
+      }
+
       setBoard(next);
-      setMoves((m) => [...m, { index, player: AI }]);
+      setMoves((m) => [...m, { index, player: AI, elapsedMs }]);
       setTurn(HUMAN);
+      if (speedMode) setTurnStartedAt(getResult(next) === null ? Date.now() : null);
       sfx.o();
     }, 400);
     return () => clearTimeout(timer);
-  }, [board, turn, mode, difficulty, result]);
+  }, [board, turn, mode, difficulty, result, speedMode, turnStartedAt]);
 
   function handleCellClick(index: number) {
     if (result !== null || board[index] !== null) return;
@@ -126,9 +162,18 @@ export function TicTacToe() {
     const player = turn;
     const next = board.slice();
     next[index] = player;
+
+    let elapsedMs = 0;
+    if (speedMode && turnStartedAt !== null) {
+      elapsedMs = Date.now() - turnStartedAt;
+      if (player === 'X') setXElapsedMs((v) => v + elapsedMs);
+      else setOElapsedMs((v) => v + elapsedMs);
+    }
+
     setBoard(next);
-    setMoves((prev) => [...prev, { index, player }]);
+    setMoves((prev) => [...prev, { index, player, elapsedMs }]);
     setTurn(player === 'X' ? 'O' : 'X');
+    if (speedMode) setTurnStartedAt(getResult(next) === null ? Date.now() : null);
     if (player === 'X') sfx.x();
     else sfx.o();
   }
@@ -166,8 +211,23 @@ export function TicTacToe() {
             </select>
           </label>
         )}
+        <label className={styles.speedToggle}>
+          <input type="checkbox" checked={speedMode} onChange={(e) => setSpeedMode(e.target.checked)} />
+          Speed Mode
+        </label>
         <button onClick={reset}>Restart</button>
       </div>
+
+      {speedMode && (
+        <div className={styles.timers}>
+          <span>
+            {mode === 'ai' ? 'You' : (user?.displayName ?? 'Player 1')}: {formatSeconds(xDisplayMs)}
+          </span>
+          <span>
+            {mode === 'ai' ? 'Computer' : 'Player 2'}: {formatSeconds(oDisplayMs)}
+          </span>
+        </div>
+      )}
 
       <div className={styles.board}>
         {board.map((cell, i) => (
@@ -190,7 +250,8 @@ export function TicTacToe() {
           {mode === 'ai' && submitMutation.isSuccess && (
             <>
               {' '}
-              — {submitMutation.data.outcome} recorded, +{submitMutation.data.points} points
+              — {submitMutation.data.outcome} recorded, {submitMutation.data.points >= 0 ? '+' : ''}
+              {submitMutation.data.points} points
             </>
           )}
         </p>

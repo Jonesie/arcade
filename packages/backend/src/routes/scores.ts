@@ -34,11 +34,13 @@ async function insertScore(
 const moveSchema = z.object({
   index: z.number().int().min(0).max(8),
   player: z.enum(['X', 'O']),
+  elapsedMs: z.number().min(0).max(300_000).optional(),
 });
 
 const ticTacToeSubmissionSchema = z.object({
   difficulty: z.enum(['easy', 'medium', 'hard']),
   moves: z.array(moveSchema).min(1).max(9),
+  speedMode: z.boolean().optional(),
 });
 
 scoresRouter.post('/tic-tac-toe/scores', requireAuth, async (req, res) => {
@@ -57,6 +59,7 @@ scoresRouter.post('/tic-tac-toe/scores', requireAuth, async (req, res) => {
   await insertScore(req.user!.id, 'tic-tac-toe', verdict.points, verdict.points, {
     difficulty: parsed.data.difficulty,
     outcome: verdict.outcome,
+    speedMode: parsed.data.speedMode ?? false,
   });
 
   res.status(201).json({ outcome: verdict.outcome, points: verdict.points });

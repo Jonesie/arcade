@@ -20,6 +20,27 @@
     font-size: 0.85rem;
     color: var(--color-text-muted);
   }
+
+  // Overrides the plain vertical label layout above for a single checkbox
+  // row (GitHub issue #10's Speed Mode toggle) instead of a stacked select.
+  .speedToggle {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+
+    input {
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+}
+
+.timers {
+  display: flex;
+  gap: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
 }
 
 .board {
