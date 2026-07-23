@@ -43,11 +43,22 @@ function project(worldX: number, worldY: number, z: number, playerX: number, pla
 }
 
 const HOOP_COUNT = 14;
+// Hoops cycle through this depth range and wrap, rather than sitting at
+// fixed z values — without this, the tunnel geometry never changed
+// frame to frame and only the (sparser) turrets/bolts showed any
+// motion, which read as the ship sitting still while a few objects
+// drifted past instead of flying forward down the shaft.
+const HOOP_CYCLE = FAR_Z - MIN_RENDER_Z;
+const HOOP_SPACING = HOOP_CYCLE / HOOP_COUNT;
 
-function drawTrench(ctx: CanvasRenderingContext2D, playerX: number, playerY: number): void {
+function positiveMod(a: number, n: number): number {
+  return ((a % n) + n) % n;
+}
+
+function drawTrench(ctx: CanvasRenderingContext2D, playerX: number, playerY: number, distance: number): void {
   const hoops: { tl: Projected; tr: Projected; bl: Projected; br: Projected }[] = [];
-  for (let i = 0; i <= HOOP_COUNT; i++) {
-    const z = FAR_Z - (i * FAR_Z) / HOOP_COUNT;
+  for (let i = 0; i < HOOP_COUNT; i++) {
+    const z = MIN_RENDER_Z + positiveMod(HOOP_CYCLE - i * HOOP_SPACING - distance, HOOP_CYCLE);
     hoops.push({
       tl: project(-TRENCH_HALF_WIDTH, -TRENCH_HALF_HEIGHT, z, playerX, playerY),
       tr: project(TRENCH_HALF_WIDTH, -TRENCH_HALF_HEIGHT, z, playerX, playerY),
@@ -261,7 +272,7 @@ export function render(canvas: HTMLCanvasElement | null, state: GameState): void
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  drawTrench(ctx, state.player.x, state.player.y);
+  drawTrench(ctx, state.player.x, state.player.y, state.distance);
   if (state.portActive) drawPort(ctx, state);
   for (const turret of state.turrets) drawTurret(ctx, turret, state.player.x, state.player.y);
   for (const bolt of state.bolts) drawBolt(ctx, bolt, state.player.x, state.player.y);
