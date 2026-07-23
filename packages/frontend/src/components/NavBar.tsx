@@ -11,7 +11,11 @@ export function NavBar() {
       <Link to="/leaderboard">Leaderboard</Link>
       {user ? (
         <>
-          <span className={styles.user}>{user.displayName}</span>
+          {user.isAdmin && <Link to="/admin">Admin</Link>}
+          <Link to="/profile" className={styles.user}>
+            {user.displayName}
+            {user.email && !user.emailVerified && <span className={styles.unverified}> ⚠️</span>}
+          </Link>
           <button onClick={() => void logout()}>Log out</button>
         </>
       ) : (

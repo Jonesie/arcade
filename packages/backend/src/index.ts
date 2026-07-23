@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { env } from './env.js';
 import { attachUser } from './middleware/auth.js';
+import { adminRouter } from './routes/admin.js';
 import { authRouter } from './routes/auth.js';
 import { gamesRouter } from './routes/games.js';
 import { leaderboardRouter } from './routes/leaderboard.js';
@@ -37,6 +38,7 @@ app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/games', scoresRouter);
 app.use('/api/games', gamesRouter);
 app.use('/api/leaderboard', leaderboardRouter);
+app.use('/api/admin', adminRouter);
 
 // Any other /api/* request that fell through is a genuine 404, not the SPA.
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));

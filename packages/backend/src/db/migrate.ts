@@ -12,6 +12,53 @@ async function migrate() {
     console.log('Created Users table');
   }
 
+  // Email-based registration (GitHub issue #12), added after the Users
+  // table already had real accounts in it. Existing accounts keep logging
+  // in with their Username and simply have Email = NULL — they're never
+  // backfilled or forced to set one, though the profile page lets them
+  // add one voluntarily. Username itself becomes optional going forward:
+  // new accounts register with email only and never get one. Split into
+  // separate, independently-idempotent steps (rather than one block gated
+  // on a single hasColumn check) because SQL Server requires dropping the
+  // old plain-unique index on Username before it can be altered, so a
+  // partial failure between steps must be safely re-runnable on its own.
+  if (!(await db.schema.hasColumn('Users', 'Email'))) {
+    await db.schema.alterTable('Users', (t) => {
+      t.string('Email', 254).nullable();
+      t.boolean('EmailVerified').notNullable().defaultTo(false);
+      t.string('EmailVerificationCode', 10).nullable();
+      t.dateTime('EmailVerificationExpiresAt').nullable();
+      t.dateTime('EmailVerificationSentAt').nullable();
+      t.boolean('Subscribed').notNullable().defaultTo(false);
+      t.boolean('Blocked').notNullable().defaultTo(false);
+    });
+    console.log('Added email/verification/subscription/moderation columns to Users');
+  }
+
+  const usernameColumn = await db('INFORMATION_SCHEMA.COLUMNS')
+    .where({ TABLE_NAME: 'Users', COLUMN_NAME: 'Username' })
+    .first();
+  if (usernameColumn?.IS_NULLABLE === 'NO') {
+    // Knex's original `.unique()` created this as a plain (not
+    // NULL-multiplicity-safe) unique index — SQL Server allows only one
+    // NULL under a plain unique index/constraint, unlike most databases,
+    // and it also blocks ALTER COLUMN outright while it exists.
+    await db.raw('DROP INDEX [users_username_unique] ON [Users]');
+    await db.schema.alterTable('Users', (t) => {
+      t.string('Username', 50).nullable().alter();
+    });
+    await db.raw('CREATE UNIQUE INDEX ix_users_username ON [Users]([Username]) WHERE [Username] IS NOT NULL');
+    console.log('Made Users.Username nullable (email-only accounts no longer get one)');
+  }
+
+  const hasEmailIndex = await db('sys.indexes').where({ name: 'ix_users_email' }).first();
+  if (!hasEmailIndex) {
+    // Same NULL-multiplicity problem as Username above — almost every
+    // existing row has Email = NULL, so this must be a filtered index.
+    await db.raw('CREATE UNIQUE INDEX ix_users_email ON [Users]([Email]) WHERE [Email] IS NOT NULL');
+    console.log('Added filtered unique index on Users.Email');
+  }
+
   if (!(await db.schema.hasTable('Games'))) {
     await db.schema.createTable('Games', (t) => {
       t.increments('Id').primary();

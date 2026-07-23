@@ -7,7 +7,7 @@ import styles from './Form.module.scss';
 export function LoginPage() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -19,7 +19,7 @@ export function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await login(username, password);
+      await login(identifier, password);
       navigate('/');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Login failed');
@@ -33,8 +33,13 @@ export function LoginPage() {
       <h1>Log in</h1>
       {error && <p className={styles.error}>{error}</p>}
       <label>
-        Username
-        <input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" required />
+        Email or username
+        <input
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+          autoComplete="username"
+          required
+        />
       </label>
       <label>
         Password

@@ -7,7 +7,7 @@ import styles from './Form.module.scss';
 export function RegisterPage() {
   const { user, register } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -20,8 +20,8 @@ export function RegisterPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await register(username, password, displayName || username);
-      navigate('/');
+      await register(email, password, displayName);
+      navigate('/profile');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Registration failed');
     } finally {
@@ -34,13 +34,13 @@ export function RegisterPage() {
       <h1>Create an account</h1>
       {error && <p className={styles.error}>{error}</p>}
       <label>
-        Username
+        Email
         <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          autoComplete="username"
-          minLength={3}
-          maxLength={30}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+          maxLength={254}
           required
         />
       </label>
@@ -49,8 +49,9 @@ export function RegisterPage() {
         <input
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          placeholder={username || 'Shown on leaderboards'}
+          placeholder="Shown on leaderboards"
           maxLength={50}
+          required
         />
       </label>
       <label>

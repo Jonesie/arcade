@@ -1,0 +1,134 @@
+import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { ApiError } from '../api/client';
+import { useAuth } from '../auth/AuthContext';
+import styles from './Form.module.scss';
+
+export function ProfilePage() {
+  const { user, addEmail, verifyEmail, resendVerification, setSubscribed } = useAuth();
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // The route this page is mounted on is already wrapped in RequireAuth.
+  if (!user) return null;
+
+  async function handleAddEmail(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setNotice(null);
+    setSubmitting(true);
+    try {
+      await addEmail(email);
+      setNotice('Verification code sent — check your email.');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not add email');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleVerify(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setNotice(null);
+    setSubmitting(true);
+    try {
+      await verifyEmail(code);
+      setCode('');
+      setNotice('Email verified!');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not verify code');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleResend() {
+    setError(null);
+    setNotice(null);
+    try {
+      await resendVerification();
+      setNotice('Verification code resent — check your email.');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not resend code');
+    }
+  }
+
+  async function handleSubscribeToggle(e: ChangeEvent<HTMLInputElement>) {
+    setError(null);
+    try {
+      await setSubscribed(e.target.checked);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not update preference');
+    }
+  }
+
+  return (
+    <div className={styles.form}>
+      <h1>Your profile</h1>
+      {error && <p className={styles.error}>{error}</p>}
+      {notice && <p className={styles.notice}>{notice}</p>}
+
+      <p>
+        <strong>Display name:</strong> {user.displayName}
+      </p>
+
+      {user.email ? (
+        <>
+          <p>
+            <strong>Email:</strong> {user.email} {user.emailVerified ? '✅ Verified' : '⚠️ Not verified'}
+          </p>
+          {!user.emailVerified && (
+            <>
+              <form onSubmit={handleVerify}>
+                <label>
+                  Verification code
+                  <input
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    inputMode="numeric"
+                    pattern="\d{6}"
+                    maxLength={6}
+                    required
+                  />
+                </label>
+                <button type="submit" className={styles.submit} disabled={submitting}>
+                  Verify
+                </button>
+              </form>
+              <button type="button" onClick={() => void handleResend()}>
+                Resend code
+              </button>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <p>No email on file. Once set, it can&apos;t be changed — pick carefully.</p>
+          <form onSubmit={handleAddEmail}>
+            <label>
+              Email
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                maxLength={254}
+                required
+              />
+            </label>
+            <button type="submit" className={styles.submit} disabled={submitting}>
+              Add email
+            </button>
+          </form>
+        </>
+      )}
+
+      <label className={styles.checkboxRow}>
+        <input type="checkbox" checked={user.subscribed} onChange={(e) => void handleSubscribeToggle(e)} />
+        Subscribe to updates
+      </label>
+    </div>
+  );
+}

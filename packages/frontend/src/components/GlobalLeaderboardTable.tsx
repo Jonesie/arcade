@@ -3,7 +3,8 @@ import { api } from '../api/client';
 import styles from './GlobalLeaderboardTable.module.scss';
 
 interface GlobalRow {
-  username: string;
+  userId: number;
+  username: string | null;
   displayName: string;
   totalPoints: number;
   totalPlays: number;
@@ -60,7 +61,7 @@ export function GlobalLeaderboardTable() {
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={row.username} style={{ color: RANK_COLORS[i % RANK_COLORS.length] }}>
+            <tr key={row.userId} style={{ color: RANK_COLORS[i % RANK_COLORS.length] }}>
               <td>{ordinal(i + 1)}</td>
               <td>{row.totalPoints}</td>
               <td>{row.totalPlays}</td>

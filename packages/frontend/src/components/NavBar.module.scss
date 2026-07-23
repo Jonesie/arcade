@@ -19,6 +19,14 @@
     }
   }
 
+  .user {
+    color: var(--chrome-lo);
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
   button {
     font: inherit;
     letter-spacing: inherit;
@@ -36,6 +44,6 @@
   }
 }
 
-.user {
-  color: var(--chrome-lo);
+.unverified {
+  font-size: 0.9em;
 }

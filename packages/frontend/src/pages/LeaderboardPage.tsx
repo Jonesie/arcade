@@ -6,7 +6,8 @@ import { games } from '../games/registry';
 import styles from './LeaderboardPage.module.scss';
 
 interface GameRow {
-  username: string;
+  userId: number;
+  username: string | null;
   displayName: string;
   bestScore: number;
   plays: number;
@@ -57,7 +58,7 @@ export function LeaderboardPage() {
             </thead>
             <tbody>
               {gameQuery.data?.leaderboard.map((row, i) => (
-                <tr key={row.username} style={{ color: RANK_COLORS[i % RANK_COLORS.length] }}>
+                <tr key={row.userId} style={{ color: RANK_COLORS[i % RANK_COLORS.length] }}>
                   <td>{ordinal(i + 1)}</td>
                   <td>{row.bestScore}</td>
                   <td>{row.plays}</td>

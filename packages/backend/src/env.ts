@@ -29,4 +29,24 @@ export const env = {
   DB_USER: required('DB_USER'),
   DB_PASSWORD: required('DB_PASSWORD'),
   JWT_SECRET: required('JWT_SECRET'),
+
+  // Outbound email (GitHub issue #12: email verification codes). Same
+  // "empty host = no-op, log instead" convention as ~/dev/lorna's mailer —
+  // this works with no SMTP configured at all, just without ever actually
+  // delivering mail; see services/mailer.ts.
+  SMTP_HOST: process.env.SMTP_HOST ?? '',
+  SMTP_PORT: Number(process.env.SMTP_PORT ?? 587),
+  SMTP_USER: process.env.SMTP_USER ?? '',
+  SMTP_PASSWORD: process.env.SMTP_PASSWORD ?? '',
+  MAIL_FROM_NAME: process.env.MAIL_FROM_NAME ?? 'The Dog House',
+  MAIL_FROM_ADDRESS: process.env.MAIL_FROM_ADDRESS ?? 'noreply@arcade.jonesie.net.nz',
+
+  // Comma-separated list of email addresses treated as admins (GitHub
+  // issue #12) — an account counts as admin only once that same address
+  // is set *and verified* on it, so someone can't self-promote just by
+  // typing an admin's email into an unverified field.
+  ADMIN_EMAILS: (process.env.ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean),
 };
