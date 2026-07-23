@@ -137,19 +137,39 @@ function boltSpeedForLevel(level: number): number {
   return BOLT_SPEED_BASE + (level - 1) * BOLT_SPEED_PER_LEVEL;
 }
 
-function randomTrenchX(): number {
-  return (Math.random() * 2 - 1) * TRENCH_HALF_WIDTH * 0.8;
-}
+const TURRET_WALL_INSET = 22;
 
-function randomTrenchY(): number {
-  return (Math.random() * 2 - 1) * TRENCH_HALF_HEIGHT * 0.8;
-}
-
+// Turrets are mounted along the trench walls/floor/ceiling, like the
+// gun emplacements in the reference arcade game — not floating loose
+// in the open flight path down the middle, which read as obstacles
+// you were meant to fly through rather than enemies off to the side.
 function spawnTurret(): Turret {
+  const side = Math.floor(Math.random() * 4);
+  const along = (Math.random() * 2 - 1) * 0.8;
+  let x: number;
+  let y: number;
+  switch (side) {
+    case 0:
+      x = -TRENCH_HALF_WIDTH + TURRET_WALL_INSET;
+      y = along * TRENCH_HALF_HEIGHT;
+      break;
+    case 1:
+      x = TRENCH_HALF_WIDTH - TURRET_WALL_INSET;
+      y = along * TRENCH_HALF_HEIGHT;
+      break;
+    case 2:
+      x = along * TRENCH_HALF_WIDTH;
+      y = TRENCH_HALF_HEIGHT - TURRET_WALL_INSET;
+      break;
+    default:
+      x = along * TRENCH_HALF_WIDTH;
+      y = -TRENCH_HALF_HEIGHT + TURRET_WALL_INSET;
+      break;
+  }
   return {
     id: idCounter++,
-    x: randomTrenchX(),
-    y: randomTrenchY(),
+    x,
+    y,
     z: FAR_Z,
     willFire: Math.random() < TURRET_FIRE_PROBABILITY,
     hasFired: false,

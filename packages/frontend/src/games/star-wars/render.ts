@@ -97,18 +97,34 @@ function drawTrench(ctx: CanvasRenderingContext2D, playerX: number, playerY: num
   ctx.restore();
 }
 
+// A small gun emplacement — wide base, domed turret head, muzzle dot —
+// rather than a plain square, so it reads as "enemy to shoot" and not
+// as a wall segment or obstacle sitting in the flight path (turrets
+// are wall/floor/ceiling-mounted; see spawnTurret in engine.ts).
 function drawTurret(ctx: CanvasRenderingContext2D, turret: Turret, playerX: number, playerY: number): void {
   const p = project(turret.x, turret.y, turret.z, playerX, playerY);
-  const size = Math.max(2, 14 * p.scale * (FOCAL / 40));
+  const size = Math.max(2, 16 * p.scale * (FOCAL / 40));
   ctx.save();
   ctx.translate(p.x, p.y);
   ctx.strokeStyle = TURRET_COLOR;
-  ctx.fillStyle = 'rgba(255, 138, 61, 0.25)';
+  ctx.fillStyle = 'rgba(255, 138, 61, 0.3)';
   ctx.lineWidth = Math.max(1, size * 0.08);
+
   ctx.beginPath();
-  ctx.rect(-size / 2, -size / 2, size, size);
+  ctx.rect(-size / 2, size * 0.12, size, size * 0.34);
   ctx.fill();
   ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(0, size * 0.12, size * 0.34, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.fillStyle = turret.hasFired ? 'rgba(255, 90, 70, 0.95)' : 'rgba(255, 200, 140, 0.9)';
+  ctx.arc(0, -size * 0.04, size * 0.1, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 
