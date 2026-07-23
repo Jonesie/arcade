@@ -17,10 +17,12 @@ import { GalagaIcon } from './galaga/GalagaIcon';
 import { SpaceInvaders } from './space-invaders/SpaceInvaders';
 import { SpaceInvadersDemo } from './space-invaders/SpaceInvadersDemo';
 import { SpaceInvadersIcon } from './space-invaders/SpaceInvadersIcon';
+import { StarWars } from './star-wars/StarWars';
+import { StarWarsDemo } from './star-wars/StarWarsDemo';
+import { StarWarsIcon } from './star-wars/StarWarsIcon';
 import { TicTacToe } from './tic-tac-toe/TicTacToe';
 import { TicTacToeDemo } from './tic-tac-toe/TicTacToeDemo';
 import { TicTacToeIcon } from './tic-tac-toe/TicTacToeIcon';
-import { StarWarsIcon } from './upcoming/icons';
 
 export interface GameDefinition {
   slug: string;
@@ -105,7 +107,15 @@ export const games: GameDefinition[] = [
     component: DonkeyKong,
     demo: DonkeyKongDemo,
   },
-];
+  {
+    slug: 'star-wars',
+    name: 'Star Wars',
+    description: 'Vector-graphics dogfight through space, then a high-speed trench run finale.',
+    icon: StarWarsIcon,
+    component: StarWars,
+    demo: StarWarsDemo,
+  },
+].sort((a, b) => a.name.localeCompare(b.name));
 
 export function getGame(slug: string): GameDefinition | undefined {
   return games.find((g) => g.slug === slug);
@@ -116,11 +126,4 @@ export function getGame(slug: string): GameDefinition | undefined {
  * the home page as "coming soon" tiles with no route/component of their
  * own. Move an entry up into `games` once it's actually built.
  */
-export const upcomingGames: UpcomingGame[] = [
-  {
-    slug: 'star-wars',
-    name: 'Star Wars',
-    description: 'Vector-graphics dogfight through space, then a high-speed trench run finale.',
-    icon: StarWarsIcon,
-  },
-];
+export const upcomingGames: UpcomingGame[] = [];

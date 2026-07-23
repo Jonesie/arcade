@@ -7,6 +7,7 @@ import { validateDonkeyKongSubmission } from '../games/donkeyKong.js';
 import { validateFroggerSubmission } from '../games/frogger.js';
 import { validateGalagaSubmission } from '../games/galaga.js';
 import { validateSpaceInvadersSubmission } from '../games/spaceInvaders.js';
+import { validateStarWarsSubmission } from '../games/starWars.js';
 import { validateTicTacToeSubmission } from '../games/ticTacToe.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -185,6 +186,31 @@ scoresRouter.post('/donkey-kong/scores', requireAuth, async (req, res) => {
   }
 
   await insertScore(req.user!.id, 'donkey-kong', parsed.data.score, verdict.points, {
+    score: parsed.data.score,
+  });
+
+  res.status(201).json({ score: parsed.data.score, points: verdict.points });
+});
+
+const starWarsSubmissionSchema = z.object({
+  score: z.number().int().min(0),
+  elapsedMs: z.number().min(0),
+});
+
+scoresRouter.post('/star-wars/scores', requireAuth, async (req, res) => {
+  const parsed = starWarsSubmissionSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid submission' });
+    return;
+  }
+
+  const verdict = validateStarWarsSubmission(parsed.data);
+  if (!verdict.valid) {
+    res.status(400).json({ error: verdict.reason });
+    return;
+  }
+
+  await insertScore(req.user!.id, 'star-wars', parsed.data.score, verdict.points, {
     score: parsed.data.score,
   });
 
