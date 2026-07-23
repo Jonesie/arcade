@@ -17,7 +17,7 @@ import { SpaceInvadersIcon } from './space-invaders/SpaceInvadersIcon';
 import { TicTacToe } from './tic-tac-toe/TicTacToe';
 import { TicTacToeDemo } from './tic-tac-toe/TicTacToeDemo';
 import { TicTacToeIcon } from './tic-tac-toe/TicTacToeIcon';
-import { DonkeyKongIcon } from './upcoming/icons';
+import { DonkeyKongIcon, StarWarsIcon } from './upcoming/icons';
 
 export interface GameDefinition {
   slug: string;
@@ -111,5 +111,11 @@ export const upcomingGames: UpcomingGame[] = [
     name: 'Donkey Kong',
     description: 'Climb girders and ladders to the top, dodging barrels rolling down from above.',
     icon: DonkeyKongIcon,
+  },
+  {
+    slug: 'star-wars',
+    name: 'Star Wars',
+    description: 'Vector-graphics dogfight through space, then a high-speed trench run finale.',
+    icon: StarWarsIcon,
   },
 ];
