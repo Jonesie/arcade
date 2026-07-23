@@ -10,6 +10,8 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 import { api, ApiError } from '../../api/client';
+import { useAuth } from '../../auth/AuthContext';
+import { Fireworks } from './Fireworks';
 import { ensureAudio, sfx, startMusic, stopMusic } from './sound';
 import styles from './TicTacToe.module.scss';
 
@@ -23,15 +25,30 @@ interface ScoreResponse {
   points: number;
 }
 
+// A different random bright hue pair each game (GitHub issue #9) — the
+// second hue is offset 120-240deg from the first so X and O always stay
+// clearly distinct regardless of what the first roll picks.
+function randomMarkColors(): Record<Player, string> {
+  const hue1 = Math.floor(Math.random() * 360);
+  const hue2 = (hue1 + 120 + Math.floor(Math.random() * 120)) % 360;
+  return { X: `hsl(${hue1}, 85%, 60%)`, O: `hsl(${hue2}, 85%, 60%)` };
+}
+
 export function TicTacToe() {
+  const { user } = useAuth();
   const [mode, setMode] = useState<Mode>('ai');
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [board, setBoard] = useState<BoardState>(emptyBoard());
   const [moves, setMoves] = useState<Move[]>([]);
   const [turn, setTurn] = useState<Player>('X');
   const [submitted, setSubmitted] = useState(false);
+  const [markColors, setMarkColors] = useState(randomMarkColors);
 
   const result = getResult(board);
+  // "You" is only meaningful vs. the computer, where the human is always X.
+  const humanLost = mode === 'ai' && result === AI;
+  const isWin = result !== null && result !== 'draw';
+  const showCelebration = isWin && !humanLost;
 
   const submitMutation = useMutation({
     mutationFn: (payload: { difficulty: Difficulty; moves: Move[] }) =>
@@ -43,6 +60,7 @@ export function TicTacToe() {
     setMoves([]);
     setTurn('X');
     setSubmitted(false);
+    setMarkColors(randomMarkColors());
     submitMutation.reset();
     // submitMutation identity changes every render; only reset on mode/difficulty switches or explicit restart.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,7 +85,11 @@ export function TicTacToe() {
   useEffect(() => {
     if (result === null) return;
     if (result === 'draw') sfx.draw();
+    else if (humanLost) sfx.lose();
     else sfx.win();
+    // humanLost derives from result/mode, both already tracked; re-running
+    // this per result change (not per mode change alone) is what we want.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result]);
 
   useEffect(() => {
@@ -111,8 +133,21 @@ export function TicTacToe() {
     else sfx.o();
   }
 
+  let statusText = '';
+  if (result === 'draw') {
+    statusText = "It's a draw! 🤝";
+  } else if (result !== null) {
+    if (mode === 'ai') {
+      statusText = humanLost ? 'You lose 😢' : 'You win! 🎉';
+    } else {
+      const winnerName = result === 'X' ? (user?.displayName ?? 'Player 1') : 'Player 2';
+      statusText = `${winnerName} wins! 🎉`;
+    }
+  }
+
   return (
     <div className={styles.game}>
+      {showCelebration && <Fireworks />}
       <div className={styles.controls}>
         <label>
           Mode
@@ -139,6 +174,7 @@ export function TicTacToe() {
           <button
             key={i}
             className={styles.cell}
+            style={cell ? { color: markColors[cell] } : undefined}
             onClick={() => handleCellClick(i)}
             disabled={cell !== null || result !== null}
             aria-label={`Cell ${i + 1}${cell ? `, ${cell}` : ', empty'}`}
@@ -150,7 +186,7 @@ export function TicTacToe() {
 
       {result !== null && (
         <p className={styles.status}>
-          {result === 'draw' ? "It's a draw!" : `${result} wins!`}
+          {statusText}
           {mode === 'ai' && submitMutation.isSuccess && (
             <>
               {' '}

@@ -1,4 +1,5 @@
 .game {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -35,6 +36,7 @@
   align-items: center;
   justify-content: center;
   background: var(--color-surface-alt);
+  text-shadow: 0 0 10px currentColor;
 
   &:disabled {
     opacity: 1;

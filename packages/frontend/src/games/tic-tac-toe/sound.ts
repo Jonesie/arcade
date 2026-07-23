@@ -37,12 +37,46 @@ function tone(freq: number, duration: number, type: OscillatorType, gain: number
   osc.stop(now + duration);
 }
 
+// A descending-slide "sad trombone" note — a sawtooth oscillator with a
+// linear pitch ramp down, mimicking a trombone slide, instead of a flat
+// tone.
+function trombone(freqFrom: number, freqTo: number, delay: number, duration: number) {
+  setTimeout(() => {
+    if (isSfxMuted() || !audioCtx) return;
+    const ctx = audioCtx;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sawtooth';
+    const now = ctx.currentTime;
+    osc.frequency.setValueAtTime(freqFrom, now);
+    osc.frequency.linearRampToValueAtTime(freqTo, now + duration);
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.linearRampToValueAtTime(0.15, now + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration);
+  }, delay * 1000);
+}
+
 export const sfx = {
   x: () => tone(440, 0.08, 'triangle', 0.1),
   o: () => tone(349, 0.08, 'triangle', 0.1),
+  // A quick four-note ascending fanfare for a win (GitHub issue #9),
+  // paired with the Fireworks canvas burst.
   win: () => {
-    tone(523, 0.12, 'triangle', 0.13);
-    setTimeout(() => tone(659, 0.16, 'triangle', 0.13), 110);
+    const notes = [523, 659, 784, 1047];
+    notes.forEach((freq, i) => setTimeout(() => tone(freq, 0.18, 'triangle', 0.14), i * 90));
+  },
+  // Classic "sad trombone" wah-wah-wah-waaah for losing to the computer
+  // (GitHub issue #9): three short descending slides, then a longer final
+  // one bending further down.
+  lose: () => {
+    trombone(392, 370, 0, 0.28);
+    trombone(370, 349, 0.3, 0.28);
+    trombone(349, 330, 0.6, 0.28);
+    trombone(330, 220, 0.9, 0.9);
   },
   draw: () => tone(220, 0.3, 'sine', 0.1),
 };
