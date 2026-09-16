@@ -18,7 +18,12 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   login: (identifier: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    displayName: string,
+    extra?: { company?: string; turnstileToken?: string },
+  ) => Promise<void>;
   logout: () => Promise<void>;
   verifyEmail: (code: string) => Promise<void>;
   resendVerification: () => Promise<void>;
@@ -51,8 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const registerMutation = useMutation({
-    mutationFn: (input: { email: string; password: string; displayName: string }) =>
-      api.post<{ user: User }>('/auth/register', input),
+    mutationFn: (input: {
+      email: string;
+      password: string;
+      displayName: string;
+      company?: string;
+      turnstileToken?: string;
+    }) => api.post<{ user: User }>('/auth/register', input),
     onSuccess: (data) => queryClient.setQueryData(['me'], data.user),
   });
 
@@ -87,8 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login: async (identifier, password) => {
         await loginMutation.mutateAsync({ identifier, password });
       },
-      register: async (email, password, displayName) => {
-        await registerMutation.mutateAsync({ email, password, displayName });
+      register: async (email, password, displayName, extra) => {
+        await registerMutation.mutateAsync({ email, password, displayName, ...extra });
       },
       logout: async () => {
         await logoutMutation.mutateAsync();

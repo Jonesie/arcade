@@ -52,4 +52,12 @@ export const env = {
     .split(',')
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean),
+
+  // Cloudflare Turnstile (bot-signup hardening). Same "empty = disabled"
+  // convention as SMTP_HOST above — with no secret key configured,
+  // registration skips CAPTCHA verification entirely, so local dev
+  // works with no Turnstile account at all. SITE_KEY is public (safe to
+  // hand to the browser); SECRET_KEY is not.
+  TURNSTILE_SITE_KEY: process.env.TURNSTILE_SITE_KEY ?? '',
+  TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY ?? '',
 };

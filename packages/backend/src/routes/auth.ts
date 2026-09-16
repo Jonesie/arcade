@@ -1,11 +1,25 @@
 import bcrypt from 'bcryptjs';
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { db } from '../db/knex.js';
 import { clearAuthCookie, loadAuthUser, requireAuth, setAuthCookie, signToken } from '../middleware/auth.js';
+import { domainAcceptsMail } from '../services/emailDomain.js';
 import { checkResendCooldown, checkVerificationCode, issueVerificationCode } from '../services/emailVerification.js';
+import { verifyTurnstileToken } from '../services/turnstile.js';
 
 export const authRouter = Router();
+
+// Tighter than the general per-route authLimiter (see index.ts), which
+// is shared across every /api/auth endpoint including login retries —
+// registration specifically is what sends a real email to whatever
+// address is given, so it gets its own stricter budget.
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 6,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const emailSchema = z
   .string()
@@ -19,6 +33,13 @@ const registerSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   displayName: z.string().trim().min(1, 'Display name is required').max(50),
+  // Honeypot: a field real users never see or fill (hidden off-screen on
+  // the register form), but that naive bots auto-fill anyway. Anything
+  // in it means the request didn't come from the real form.
+  company: z.string().max(200).optional(),
+  // Cloudflare Turnstile response token — only required when
+  // TURNSTILE_SECRET_KEY is configured (see services/turnstile.ts).
+  turnstileToken: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -38,17 +59,35 @@ const subscribeSchema = z.object({ subscribed: z.boolean() });
 // nullable for old accounts (see db/migrate.ts). "Email already exists"
 // is checked case-insensitively even though it's stored lowercase, same
 // defensive style as the pre-existing Username check this replaces.
-authRouter.post('/register', async (req, res) => {
+authRouter.post('/register', registerLimiter, async (req, res) => {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Invalid input' });
     return;
   }
-  const { email, password, displayName } = parsed.data;
+  const { email, password, displayName, company, turnstileToken } = parsed.data;
+
+  // Honeypot tripped — respond exactly like an ordinary validation
+  // failure so a bot can't tell this field is being checked at all.
+  if (company) {
+    res.status(400).json({ error: 'Invalid input' });
+    return;
+  }
+
+  const humanVerified = await verifyTurnstileToken(turnstileToken, req.ip ?? '');
+  if (!humanVerified) {
+    res.status(400).json({ error: 'Verification failed — please try again' });
+    return;
+  }
 
   const existing = await db('Users').whereRaw('LOWER(Email) = ?', [email]).first();
   if (existing) {
     res.status(409).json({ error: 'An account with that email already exists' });
+    return;
+  }
+
+  if (!(await domainAcceptsMail(email))) {
+    res.status(400).json({ error: "We couldn't verify that email domain — check for typos" });
     return;
   }
 
@@ -173,6 +212,11 @@ authRouter.post('/add-email', requireAuth, async (req, res) => {
   const existing = await db('Users').whereRaw('LOWER(Email) = ?', [email]).first();
   if (existing) {
     res.status(409).json({ error: 'An account with that email already exists' });
+    return;
+  }
+
+  if (!(await domainAcceptsMail(email))) {
+    res.status(400).json({ error: "We couldn't verify that email domain — check for typos" });
     return;
   }
 

@@ -8,6 +8,7 @@ import { env } from './env.js';
 import { attachUser } from './middleware/auth.js';
 import { adminRouter } from './routes/admin.js';
 import { authRouter } from './routes/auth.js';
+import { configRouter } from './routes/config.js';
 import { gamesRouter } from './routes/games.js';
 import { leaderboardRouter } from './routes/leaderboard.js';
 import { scoresRouter } from './routes/scores.js';
@@ -21,7 +22,21 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.disable('x-powered-by');
-app.use(helmet());
+app.use(
+  helmet({
+    // Extends helmet's default CSP to allow Cloudflare Turnstile's
+    // widget script and challenge iframe (see routes/config.ts and
+    // services/turnstile.ts) — everything else stays locked to 'self'.
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'script-src': ["'self'", 'https://challenges.cloudflare.com'],
+        'frame-src': ["'self'", 'https://challenges.cloudflare.com'],
+        'connect-src': ["'self'", 'https://challenges.cloudflare.com'],
+      },
+    },
+  }),
+);
 app.use(express.json({ limit: '100kb' }));
 app.use(cookieParser());
 app.use(attachUser);
@@ -34,6 +49,7 @@ const authLimiter = rateLimit({
 });
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+app.use('/api/config', configRouter);
 app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/games', scoresRouter);
 app.use('/api/games', gamesRouter);

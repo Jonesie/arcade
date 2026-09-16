@@ -1,7 +1,9 @@
+import { useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { ApiError } from '../api/client';
+import { api, ApiError } from '../api/client';
+import { Turnstile } from '../components/Turnstile';
 import styles from './Form.module.scss';
 
 export function RegisterPage() {
@@ -10,8 +12,21 @@ export function RegisterPage() {
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
+  // Honeypot — real users never see this field, so it should always
+  // stay empty; a filled value means the submission didn't come from
+  // the real form (see the matching check in backend routes/auth.ts).
+  const [company, setCompany] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const configQuery = useQuery({
+    queryKey: ['config'],
+    queryFn: () => api.get<{ turnstileSiteKey: string | null }>('/config'),
+    staleTime: Infinity,
+  });
+  const turnstileSiteKey = configQuery.data?.turnstileSiteKey ?? null;
+  const captchaPending = Boolean(turnstileSiteKey) && !turnstileToken;
 
   if (user) return <Navigate to="/" replace />;
 
@@ -20,7 +35,7 @@ export function RegisterPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await register(email, password, displayName);
+      await register(email, password, displayName, { company, turnstileToken: turnstileToken ?? undefined });
       navigate('/profile');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Registration failed');
@@ -65,7 +80,20 @@ export function RegisterPage() {
           required
         />
       </label>
-      <button type="submit" className={styles.submit} disabled={submitting}>
+      <div className={styles.honeypotField} aria-hidden="true">
+        <label htmlFor="company">Company</label>
+        <input
+          id="company"
+          name="company"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+        />
+      </div>
+      {turnstileSiteKey && <Turnstile siteKey={turnstileSiteKey} onToken={setTurnstileToken} />}
+      <button type="submit" className={styles.submit} disabled={submitting || captchaPending}>
         {submitting ? 'Creating account…' : 'Create account'}
       </button>
     </form>

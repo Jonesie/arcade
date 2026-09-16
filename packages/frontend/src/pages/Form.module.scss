@@ -30,6 +30,18 @@
   font-size: 0.9rem;
 }
 
+// Honeypot field for the register form (see RegisterPage.tsx) — hidden
+// from sighted and screen-reader users alike (aria-hidden handles the
+// latter), but still present in the DOM/tab order-free, so a scripted
+// bot that blindly fills every input still trips it.
+.honeypotField {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .submit {
   background: var(--color-primary);
   border-color: var(--color-primary);
