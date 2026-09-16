@@ -25,10 +25,12 @@ const SCENARIOS: Scenario[] = [
   { type: 'copsArrive', message: 'COPS! EVERYONE OUT!', icon: '🚨', durationMs: 2700, playSfx: sfx.copsArrive },
 ];
 
-// Floor of 60s keeps events to at most one per minute, per user feedback
-// that the original 30-90s range felt too frequent.
-const MIN_INTERVAL_MS = 60_000;
-const MAX_INTERVAL_MS = 180_000;
+// Back down to the original 30-90s range: the 60-180s floor (added
+// after feedback that 30-90s felt too frequent) swung too far the
+// other way — a 1-3 minute gap made it easy to toggle Real Mode on,
+// watch for a bit, and reasonably conclude it wasn't doing anything.
+const MIN_INTERVAL_MS = 30_000;
+const MAX_INTERVAL_MS = 90_000;
 
 function randomInterval(): number {
   return MIN_INTERVAL_MS + Math.random() * (MAX_INTERVAL_MS - MIN_INTERVAL_MS);
