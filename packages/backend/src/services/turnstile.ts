@@ -2,9 +2,10 @@
  * Cloudflare Turnstile CAPTCHA verification, used to stop scripted
  * registration spam (bots submitting throwaway/other-people's email
  * addresses, which then bounce and erode the sending account's
- * deliverability). Same "empty config = disabled" convention as
- * mailer.ts's SMTP_HOST — with no secret key set, verification is
- * skipped entirely so local dev needs no Turnstile account at all.
+ * deliverability) and credential-stuffing against login. Same "empty
+ * config = disabled" convention as mailer.ts's SMTP_HOST — with no
+ * secret key set, verification is skipped entirely so local dev needs
+ * no Turnstile account at all.
  */
 import { env } from '../env.js';
 

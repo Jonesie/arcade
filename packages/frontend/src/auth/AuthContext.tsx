@@ -17,7 +17,7 @@ export interface User {
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  login: (identifier: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string, extra?: { turnstileToken?: string }) => Promise<void>;
   register: (
     email: string,
     password: string,
@@ -50,8 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const loginMutation = useMutation({
-    mutationFn: ({ identifier, password }: { identifier: string; password: string }) =>
-      api.post<{ user: User }>('/auth/login', { identifier, password }),
+    mutationFn: (input: { identifier: string; password: string; turnstileToken?: string }) =>
+      api.post<{ user: User }>('/auth/login', input),
     onSuccess: (data) => queryClient.setQueryData(['me'], data.user),
   });
 
@@ -94,8 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user: meQuery.data ?? null,
       isLoading: meQuery.isLoading,
-      login: async (identifier, password) => {
-        await loginMutation.mutateAsync({ identifier, password });
+      login: async (identifier, password, extra) => {
+        await loginMutation.mutateAsync({ identifier, password, ...extra });
       },
       register: async (email, password, displayName, extra) => {
         await registerMutation.mutateAsync({ email, password, displayName, ...extra });

@@ -1,9 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { api, ApiError } from '../api/client';
-import { Turnstile } from '../components/Turnstile';
+import { ApiError } from '../api/client';
+import { Turnstile, useTurnstileSiteKey } from '../components/Turnstile';
 import styles from './Form.module.scss';
 
 export function RegisterPage() {
@@ -17,15 +16,11 @@ export function RegisterPage() {
   // the real form (see the matching check in backend routes/auth.ts).
   const [company, setCompany] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReset, setTurnstileReset] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const configQuery = useQuery({
-    queryKey: ['config'],
-    queryFn: () => api.get<{ turnstileSiteKey: string | null }>('/config'),
-    staleTime: Infinity,
-  });
-  const turnstileSiteKey = configQuery.data?.turnstileSiteKey ?? null;
+  const turnstileSiteKey = useTurnstileSiteKey();
   const captchaPending = Boolean(turnstileSiteKey) && !turnstileToken;
 
   if (user) return <Navigate to="/" replace />;
@@ -39,6 +34,7 @@ export function RegisterPage() {
       navigate('/profile');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Registration failed');
+      setTurnstileReset((n) => n + 1);
     } finally {
       setSubmitting(false);
     }
@@ -92,7 +88,9 @@ export function RegisterPage() {
           onChange={(e) => setCompany(e.target.value)}
         />
       </div>
-      {turnstileSiteKey && <Turnstile siteKey={turnstileSiteKey} onToken={setTurnstileToken} />}
+      {turnstileSiteKey && (
+        <Turnstile siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileReset} />
+      )}
       <button type="submit" className={styles.submit} disabled={submitting || captchaPending}>
         {submitting ? 'Creating account…' : 'Create account'}
       </button>

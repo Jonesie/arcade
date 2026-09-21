@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { ApiError } from '../api/client';
+import { Turnstile, useTurnstileSiteKey } from '../components/Turnstile';
 import styles from './Form.module.scss';
 
 export function LoginPage() {
@@ -9,8 +10,13 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReset, setTurnstileReset] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const turnstileSiteKey = useTurnstileSiteKey();
+  const captchaPending = Boolean(turnstileSiteKey) && !turnstileToken;
 
   if (user) return <Navigate to="/" replace />;
 
@@ -19,10 +25,13 @@ export function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await login(identifier, password);
+      await login(identifier, password, { turnstileToken: turnstileToken ?? undefined });
       navigate('/');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Login failed');
+      // Wrong-password retries are the normal case here, and the token
+      // just sent is spent either way.
+      setTurnstileReset((n) => n + 1);
     } finally {
       setSubmitting(false);
     }
@@ -51,7 +60,10 @@ export function LoginPage() {
           required
         />
       </label>
-      <button type="submit" className={styles.submit} disabled={submitting}>
+      {turnstileSiteKey && (
+        <Turnstile siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileReset} />
+      )}
+      <button type="submit" className={styles.submit} disabled={submitting || captchaPending}>
         {submitting ? 'Logging in…' : 'Log in'}
       </button>
     </form>

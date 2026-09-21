@@ -1,4 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+import { api } from '../api/client';
 
 declare global {
   interface Window {
@@ -11,6 +13,7 @@ declare global {
           'expired-callback'?: () => void;
         },
       ) => string;
+      reset: (widgetId: string) => void;
       remove: (widgetId: string) => void;
     };
   }
@@ -35,16 +38,33 @@ function loadTurnstileScript(): Promise<void> {
   return scriptLoadPromise;
 }
 
+/** The public Turnstile site key, or null when the backend has no
+ * Turnstile configured (in which case the widget shouldn't render and
+ * forms submit without a token — see backend services/turnstile.ts). */
+export function useTurnstileSiteKey(): string | null {
+  const configQuery = useQuery({
+    queryKey: ['config'],
+    queryFn: () => api.get<{ turnstileSiteKey: string | null }>('/config'),
+    staleTime: Infinity,
+  });
+  return configQuery.data?.turnstileSiteKey ?? null;
+}
+
 interface TurnstileProps {
   siteKey: string;
   onToken: (token: string | null) => void;
+  /** Bump this to reset the widget and get a fresh token. Tokens are
+   * single-use, so a form must do this after any failed submit or the
+   * user's retry would be rejected with the already-spent token. */
+  resetKey?: number;
 }
 
-/** Cloudflare Turnstile widget, used on the register form (see
- * ../pages/RegisterPage.tsx) to block scripted signup spam. Renders
- * nothing until the script loads; `onToken` fires with the response
- * token on success and `null` if it expires before the form submits. */
-export function Turnstile({ siteKey, onToken }: TurnstileProps) {
+/** Cloudflare Turnstile widget, used on the register and login forms
+ * (see ../pages/RegisterPage.tsx, ../pages/LoginPage.tsx) to block
+ * scripted signup spam and credential stuffing. Renders nothing until
+ * the script loads; `onToken` fires with the response token on success
+ * and `null` if it expires before the form submits. */
+export function Turnstile({ siteKey, onToken, resetKey = 0 }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
 
@@ -73,6 +93,14 @@ export function Turnstile({ siteKey, onToken }: TurnstileProps) {
     // meant to retrigger the widget.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteKey]);
+
+  useEffect(() => {
+    if (resetKey === 0 || !widgetIdRef.current || !window.turnstile) return;
+    window.turnstile.reset(widgetIdRef.current);
+    onToken(null);
+    // Same reasoning as above: only the reset signal should trigger this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetKey]);
 
   return <div ref={containerRef} />;
 }

@@ -73,10 +73,11 @@ guard against it, all in `packages/backend/src/routes/auth.ts`:
      TURNSTILE_SITE_KEY=...
      TURNSTILE_SECRET_KEY=...
      ```
-  3. Restart the backend (or rebuild/redeploy). The register page fetches
-     the site key from `GET /api/config` at runtime and renders the widget
-     automatically — no frontend rebuild needed just to toggle this, since
-     it isn't baked in at Vite build time.
+  3. Restart the backend (or rebuild/redeploy). The register and login
+     pages fetch the site key from `GET /api/config` at runtime and render
+     the widget automatically — no frontend rebuild needed just to toggle
+     this, since it isn't baked in at Vite build time. On login the check
+     blunts credential-stuffing; on register it stops signup spam.
 
 ## Scripts
 

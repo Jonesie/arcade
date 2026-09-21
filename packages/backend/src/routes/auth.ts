@@ -45,6 +45,9 @@ const registerSchema = z.object({
 const loginSchema = z.object({
   identifier: z.string().trim().min(1).max(254),
   password: z.string().min(1).max(200),
+  // Same optional-when-unconfigured Turnstile token as registration —
+  // here it blunts credential-stuffing rather than signup spam.
+  turnstileToken: z.string().optional(),
 });
 
 const verifyCodeSchema = z.object({
@@ -116,7 +119,15 @@ authRouter.post('/login', async (req, res) => {
     res.status(401).json({ error: 'Invalid credentials' });
     return;
   }
-  const { identifier, password } = parsed.data;
+  const { identifier, password, turnstileToken } = parsed.data;
+
+  // Checked before touching the database or bcrypt so a bot without a
+  // valid token can't use this endpoint to test credentials at all.
+  const humanVerified = await verifyTurnstileToken(turnstileToken, req.ip ?? '');
+  if (!humanVerified) {
+    res.status(400).json({ error: 'Verification failed — please try again' });
+    return;
+  }
 
   const row = await db('Users')
     .whereRaw('LOWER(Username) = LOWER(?) OR LOWER(Email) = LOWER(?)', [identifier, identifier])
