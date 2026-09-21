@@ -1,5 +1,22 @@
-.title {
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
   margin: 0 0 1.5rem;
+}
+
+.title {
+  margin: 0;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
 }
 
 .table {
@@ -29,6 +46,19 @@
   td:first-child {
     text-decoration: line-through;
   }
+}
+
+.actions {
+  white-space: nowrap;
+
+  button + button {
+    margin-left: 0.5rem;
+  }
+}
+
+.danger {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .error {

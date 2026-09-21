@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { api, ApiError } from '../api/client';
 import styles from './AdminPage.module.scss';
 
@@ -34,13 +35,43 @@ export function AdminPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
   });
 
+  // Only offered on blocked rows (the backend enforces the same), and
+  // takes their scores with them — see the DELETE handler in
+  // backend routes/admin.ts for why block and delete are kept distinct.
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => api.delete(`/admin/users/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
+  });
+
+  function confirmDelete(row: AdminUserRow) {
+    const who = row.email ?? row.username ?? row.displayName;
+    const points = row.totalPoints ?? 0;
+    const scoresNote = points > 0 ? ` and their ${points} points of scores` : '';
+    if (window.confirm(`Permanently delete ${who}${scoresNote}? This frees their email to register again.`)) {
+      deleteMutation.mutate(row.id);
+    }
+  }
+
+  const mutationError = blockMutation.error ?? deleteMutation.error;
+
+  const [hideBlocked, setHideBlocked] = useState(false);
+  const allUsers = usersQuery.data?.users ?? [];
+  const blockedCount = allUsers.filter((u) => u.blocked).length;
+  const visibleUsers = hideBlocked ? allUsers.filter((u) => !u.blocked) : allUsers;
+
   return (
     <div>
-      <h1 className={styles.title}>Users</h1>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Users</h1>
+        <label className={styles.toggle}>
+          <input type="checkbox" checked={hideBlocked} onChange={(e) => setHideBlocked(e.target.checked)} />
+          Hide blocked ({blockedCount})
+        </label>
+      </div>
       {usersQuery.isError && <p className={styles.error}>Could not load users.</p>}
-      {blockMutation.isError && (
+      {mutationError && (
         <p className={styles.error}>
-          {blockMutation.error instanceof ApiError ? blockMutation.error.message : 'Could not update that user.'}
+          {mutationError instanceof ApiError ? mutationError.message : 'Could not update that user.'}
         </p>
       )}
       <table className={styles.table}>
@@ -57,7 +88,7 @@ export function AdminPage() {
           </tr>
         </thead>
         <tbody>
-          {usersQuery.data?.users.map((row) => (
+          {visibleUsers.map((row) => (
             <tr key={row.id} className={row.blocked ? styles.blockedRow : undefined}>
               <td>{row.displayName}</td>
               <td>{row.username ?? '—'}</td>
@@ -69,20 +100,32 @@ export function AdminPage() {
               <td>{row.totalPoints ?? 0}</td>
               <td>{new Date(row.createdAt).toLocaleDateString()}</td>
               <td>{row.blocked ? 'Blocked' : 'Active'}</td>
-              <td>
+              <td className={styles.actions}>
                 <button
                   type="button"
-                  disabled={blockMutation.isPending}
+                  disabled={blockMutation.isPending || deleteMutation.isPending}
                   onClick={() => blockMutation.mutate({ id: row.id, blocked: !row.blocked })}
                 >
                   {row.blocked ? 'Unblock' : 'Block'}
                 </button>
+                {row.blocked && (
+                  <button
+                    type="button"
+                    className={styles.danger}
+                    disabled={blockMutation.isPending || deleteMutation.isPending}
+                    onClick={() => confirmDelete(row)}
+                  >
+                    Delete
+                  </button>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      {usersQuery.data?.users.length === 0 && <p className={styles.error}>No users yet.</p>}
+      {usersQuery.data && visibleUsers.length === 0 && (
+        <p className={styles.error}>{allUsers.length === 0 ? 'No users yet.' : 'All users are blocked.'}</p>
+      )}
     </div>
   );
 }
