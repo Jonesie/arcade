@@ -35,6 +35,13 @@ async function migrate() {
     console.log('Added email/verification/subscription/moderation columns to Users');
   }
 
+  if (!(await db.schema.hasColumn('Users', 'EmailVerificationAttempts'))) {
+    await db.schema.alterTable('Users', (t) => {
+      t.integer('EmailVerificationAttempts').notNullable().defaultTo(0);
+    });
+    console.log('Added Users.EmailVerificationAttempts');
+  }
+
   const usernameColumn = await db('INFORMATION_SCHEMA.COLUMNS')
     .where({ TABLE_NAME: 'Users', COLUMN_NAME: 'Username' })
     .first();

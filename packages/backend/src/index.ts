@@ -1,7 +1,8 @@
+import 'express-async-errors';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import cookieParser from 'cookie-parser';
-import express from 'express';
+import express, { type NextFunction, type Request, type Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { env } from './env.js';
@@ -65,6 +66,20 @@ const frontendDist = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendDist));
 app.get('*', (_req, res) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
+});
+
+// Last in the chain: an error thrown or rejected in any route (e.g. a DB
+// failure) becomes a 500 for that request instead of an unhandled
+// rejection that takes the whole process down. Body-parser errors keep
+// their own 4xx status.
+app.use((err: Error & { status?: number }, _req: Request, res: Response, next: NextFunction) => {
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+  const status = err.status && err.status >= 400 && err.status < 500 ? err.status : 500;
+  if (status === 500) console.error('[error]', err);
+  res.status(status).json({ error: status === 500 ? 'Internal server error' : 'Bad request' });
 });
 
 app.listen(env.PORT, () => {

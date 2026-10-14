@@ -1,11 +1,13 @@
+import { randomInt } from 'node:crypto';
 import { db } from '../db/knex.js';
 import { sendEmail, verificationEmailContent } from './mailer.js';
 
 const CODE_EXPIRY_MS = 15 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
+export const MAX_VERIFY_ATTEMPTS = 5;
 
 function generateCode(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100000, 1000000));
 }
 
 /** Generates a fresh 6-digit code for a user's (already-set) Email, stores it, and emails it. */
@@ -18,6 +20,7 @@ export async function issueVerificationCode(userId: number, email: string): Prom
       EmailVerificationCode: code,
       EmailVerificationExpiresAt: new Date(now.getTime() + CODE_EXPIRY_MS),
       EmailVerificationSentAt: now,
+      EmailVerificationAttempts: 0,
     });
   await sendEmail(email, 'Verify your email — The Dog House', verificationEmailContent(code));
 }
@@ -41,9 +44,13 @@ export function checkVerificationCode(
   submittedCode: string,
   storedCode: string | null,
   expiresAt: Date | string | null,
+  attempts = 0,
 ): VerifyVerdict {
   if (!storedCode || !expiresAt) {
     return { ok: false, reason: 'No verification code pending — request a new one' };
+  }
+  if (attempts >= MAX_VERIFY_ATTEMPTS) {
+    return { ok: false, reason: 'Too many incorrect attempts — request a new code' };
   }
   if (new Date(expiresAt).getTime() < Date.now()) {
     return { ok: false, reason: 'That code has expired — request a new one' };

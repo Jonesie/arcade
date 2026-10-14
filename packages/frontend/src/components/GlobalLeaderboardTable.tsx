@@ -4,7 +4,6 @@ import styles from './GlobalLeaderboardTable.module.scss';
 
 interface GlobalRow {
   userId: number;
-  username: string | null;
   displayName: string;
   totalPoints: number;
   totalPlays: number;
