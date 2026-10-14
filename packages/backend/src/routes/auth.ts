@@ -42,6 +42,11 @@ const registerSchema = z.object({
   turnstileToken: z.string().optional(),
 });
 
+// Compared against when the account doesn't exist, so an unknown login
+// costs the same bcrypt time as a wrong password and response timing
+// doesn't reveal which identifiers are registered.
+const DUMMY_HASH = bcrypt.hashSync('arcade-dummy-password', 10);
+
 const loginSchema = z.object({
   identifier: z.string().trim().min(1).max(254),
   password: z.string().min(1).max(200),
@@ -132,7 +137,8 @@ authRouter.post('/login', async (req, res) => {
   const row = await db('Users')
     .whereRaw('LOWER(Username) = LOWER(?) OR LOWER(Email) = LOWER(?)', [identifier, identifier])
     .first();
-  if (!row || !(await bcrypt.compare(password, row.PasswordHash))) {
+  const passwordOk = await bcrypt.compare(password, row?.PasswordHash ?? DUMMY_HASH);
+  if (!row || !passwordOk) {
     res.status(401).json({ error: 'Invalid credentials' });
     return;
   }
