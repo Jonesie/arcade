@@ -116,3 +116,21 @@ export function verificationEmailContent(code: string): EmailContent {
 
   return { text, html };
 }
+
+export function accountExistsEmailContent(): EmailContent {
+  const loginUrl = `${env.PUBLIC_BASE_URL}/login`;
+  const text =
+    `Someone (hopefully you) tried to create a Dog House account with this email address, ` +
+    `but it already has one.\n\nLog in here: ${loginUrl}\n\n` +
+    `If it wasn't you, you can ignore this email — nothing has changed.\n\n— The Dog House\n`;
+  const html = brandedHtml(`
+    <p style="margin:0 0 16px;">Someone (hopefully you) tried to create a Dog House account with this email address, but it already has one.</p>
+    <p style="margin:0 0 20px;text-align:center;">
+      <a href="${loginUrl}" style="display:inline-block;background:#7c6cf0;color:#fff;text-decoration:none;font-weight:bold;padding:12px 26px;border-radius:8px;font-size:16px;">
+        Log in
+      </a>
+    </p>
+    <p style="margin:0;color:#a9a4c9;font-size:13px;">If it wasn't you, you can ignore this email — nothing has changed.</p>
+  `);
+  return { text, html };
+}

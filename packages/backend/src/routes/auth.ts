@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { db } from '../db/knex.js';
 import { clearAuthCookie, loadAuthUser, requireAuth, setAuthCookie, signToken } from '../middleware/auth.js';
+import { accountExistsEmailContent, sendEmail } from '../services/mailer.js';
 import { domainAcceptsMail } from '../services/emailDomain.js';
 import { checkResendCooldown, checkVerificationCode, issueVerificationCode } from '../services/emailVerification.js';
 import { verifyTurnstileToken } from '../services/turnstile.js';
@@ -64,9 +65,13 @@ const addEmailSchema = z.object({ email: emailSchema });
 const subscribeSchema = z.object({ subscribed: z.boolean() });
 
 // New accounts register with email only — Username is legacy, kept
-// nullable for old accounts (see db/migrate.ts). "Email already exists"
-// is checked case-insensitively even though it's stored lowercase, same
-// defensive style as the pre-existing Username check this replaces.
+// nullable for old accounts (see db/migrate.ts). Registration never
+// reveals whether an email is already taken: every well-formed request
+// gets the same 202 and no session, so the caller can't probe which
+// addresses have accounts. New addresses get a verification code; existing
+// ones get a "you already have an account" notice instead. The new user
+// logs in with the password they just chose. The bcrypt hash is computed
+// either way so response time doesn't differ between the two cases.
 authRouter.post('/register', registerLimiter, async (req, res) => {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -88,32 +93,41 @@ authRouter.post('/register', registerLimiter, async (req, res) => {
     return;
   }
 
-  const existing = await db('Users').whereRaw('LOWER(Email) = ?', [email]).first();
-  if (existing) {
-    res.status(409).json({ error: 'An account with that email already exists' });
-    return;
-  }
-
+  // Before the existing-account lookup so an unreachable domain gets the
+  // same error whether or not the address is registered.
   if (!(await domainAcceptsMail(email))) {
     res.status(400).json({ error: "We couldn't verify that email domain — check for typos" });
     return;
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  await db('Users').insert({
-    Email: email,
-    PasswordHash: passwordHash,
-    DisplayName: displayName,
-    EmailVerified: false,
-    Subscribed: false,
-    Blocked: false,
-  });
-  const created = await db('Users').whereRaw('LOWER(Email) = ?', [email]).first();
-  await issueVerificationCode(created.Id, email);
+  const existing = await db('Users').whereRaw('LOWER(Email) = ?', [email]).first();
+  if (existing) {
+    if (!existing.Blocked) {
+      await sendEmail(email, 'You already have an account — The Dog House', accountExistsEmailContent());
+    }
+  } else {
+    try {
+      await db('Users').insert({
+        Email: email,
+        PasswordHash: passwordHash,
+        DisplayName: displayName,
+        EmailVerified: false,
+        Subscribed: false,
+        Blocked: false,
+      });
+      const created = await db('Users').whereRaw('LOWER(Email) = ?', [email]).first();
+      await issueVerificationCode(created.Id, email);
+    } catch (err) {
+      // A concurrent registration for the same address can trip the
+      // unique index between the lookup above and this insert — that's
+      // just the "already exists" case again, not a server error.
+      const stillMissing = !(await db('Users').whereRaw('LOWER(Email) = ?', [email]).first());
+      if (stillMissing) throw err;
+    }
+  }
 
-  const user = await loadAuthUser(created.Id);
-  setAuthCookie(res, signToken(created.Id));
-  res.status(201).json({ user });
+  res.status(202).json({ message: 'Check your email, then log in.' });
 });
 
 // Accepts either the legacy Username or an Email so old accounts (no

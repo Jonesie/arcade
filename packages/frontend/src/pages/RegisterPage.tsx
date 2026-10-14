@@ -31,7 +31,17 @@ export function RegisterPage() {
     setSubmitting(true);
     try {
       await register(email, password, displayName, { company, turnstileToken: turnstileToken ?? undefined });
-      navigate('/profile');
+      // Registration deliberately doesn't start a session (it would reveal
+      // whether the email already had an account), so go to login with the
+      // email filled in and land on the verify-code page once they're in.
+      navigate('/login', {
+        replace: true,
+        state: {
+          from: '/profile',
+          email,
+          notice: 'Check your email for a verification code, then log in to enter it.',
+        },
+      });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Registration failed');
       setTurnstileReset((n) => n + 1);

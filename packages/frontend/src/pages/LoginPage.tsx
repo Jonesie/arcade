@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { ApiError } from '../api/client';
 import { Turnstile, useTurnstileSiteKey } from '../components/Turnstile';
@@ -8,7 +8,12 @@ import styles from './Form.module.scss';
 export function LoginPage() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
-  const [identifier, setIdentifier] = useState('');
+  const location = useLocation();
+  const locationState = location.state as { from?: unknown; email?: unknown; notice?: unknown } | null;
+  const from = locationState?.from;
+  // Only same-site paths set by RequireAuth — never an arbitrary URL.
+  const redirectTo = typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') ? from : '/';
+  const [identifier, setIdentifier] = useState(typeof locationState?.email === 'string' ? locationState.email : '');
   const [password, setPassword] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileReset, setTurnstileReset] = useState(0);
@@ -18,7 +23,7 @@ export function LoginPage() {
   const turnstileSiteKey = useTurnstileSiteKey();
   const captchaPending = Boolean(turnstileSiteKey) && !turnstileToken;
 
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to={redirectTo} replace />;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -26,7 +31,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       await login(identifier, password, { turnstileToken: turnstileToken ?? undefined });
-      navigate('/');
+      navigate(redirectTo);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Login failed');
       // Wrong-password retries are the normal case here, and the token
@@ -40,6 +45,7 @@ export function LoginPage() {
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
       <h1>Log in</h1>
+      {typeof locationState?.notice === 'string' && <p>{locationState.notice}</p>}
       {error && <p className={styles.error}>{error}</p>}
       <label>
         Email or username

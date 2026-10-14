@@ -62,8 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayName: string;
       company?: string;
       turnstileToken?: string;
-    }) => api.post<{ user: User }>('/auth/register', input),
-    onSuccess: (data) => queryClient.setQueryData(['me'], data.user),
+    }) => api.post<{ message: string }>('/auth/register', input),
   });
 
   const logoutMutation = useMutation({
