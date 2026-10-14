@@ -7,7 +7,6 @@ import styles from './LeaderboardPage.module.scss';
 
 interface GameRow {
   userId: number;
-  username: string | null;
   displayName: string;
   bestScore: number;
   plays: number;

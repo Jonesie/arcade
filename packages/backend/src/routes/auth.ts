@@ -168,8 +168,16 @@ authRouter.post('/verify-email', requireAuth, async (req, res) => {
     return;
   }
 
-  const verdict = checkVerificationCode(parsed.data.code, row.EmailVerificationCode, row.EmailVerificationExpiresAt);
+  const verdict = checkVerificationCode(
+    parsed.data.code,
+    row.EmailVerificationCode,
+    row.EmailVerificationExpiresAt,
+    row.EmailVerificationAttempts ?? 0,
+  );
   if (!verdict.ok) {
+    if (verdict.reason === 'Incorrect code') {
+      await db('Users').where({ Id: row.Id }).increment('EmailVerificationAttempts', 1);
+    }
     res.status(400).json({ error: verdict.reason });
     return;
   }
