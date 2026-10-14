@@ -62,6 +62,8 @@ const verifyCodeSchema = z.object({
 
 const addEmailSchema = z.object({ email: emailSchema });
 
+const deleteAccountSchema = z.object({ password: z.string().min(1).max(200) });
+
 const subscribeSchema = z.object({ subscribed: z.boolean() });
 
 // New accounts register with email only — Username is legacy, kept
@@ -276,4 +278,31 @@ authRouter.post('/subscribe', requireAuth, async (req, res) => {
   await db('Users').where({ Id: req.user!.id }).update({ Subscribed: parsed.data.subscribed });
   const user = await loadAuthUser(req.user!.id);
   res.json({ user });
+});
+
+// Self-service erasure: removes the account and every score it owns. The
+// password is re-checked (not just the session cookie) so a stolen or
+// left-open session can't wipe an account. Uses POST rather than DELETE
+// so the confirmation body is unambiguous through proxies.
+authRouter.post('/delete-account', requireAuth, async (req, res) => {
+  const parsed = deleteAccountSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Enter your password to confirm' });
+    return;
+  }
+
+  const row = await db('Users').where({ Id: req.user!.id }).first();
+  if (!row || !(await bcrypt.compare(parsed.data.password, row.PasswordHash))) {
+    // 403, not 401: the session itself is fine, only the confirmation failed.
+    res.status(403).json({ error: 'Incorrect password' });
+    return;
+  }
+
+  await db.transaction(async (trx) => {
+    await trx('Scores').where({ UserId: row.Id }).delete();
+    await trx('Users').where({ Id: row.Id }).delete();
+  });
+
+  clearAuthCookie(res);
+  res.status(204).end();
 });

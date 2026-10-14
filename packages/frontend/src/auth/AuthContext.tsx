@@ -25,6 +25,7 @@ interface AuthContextValue {
     extra?: { company?: string; turnstileToken?: string },
   ) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   verifyEmail: (code: string) => Promise<void>;
   resendVerification: () => Promise<void>;
   addEmail: (email: string) => Promise<void>;
@@ -70,6 +71,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: () => queryClient.setQueryData(['me'], null),
   });
 
+  const deleteAccountMutation = useMutation({
+    mutationFn: (password: string) => api.post('/auth/delete-account', { password }),
+    onSuccess: () => {
+      queryClient.setQueryData(['me'], null);
+      // Scores are gone too, so leaderboards cached in the browser are stale.
+      queryClient.invalidateQueries();
+    },
+  });
+
   const verifyEmailMutation = useMutation({
     mutationFn: (code: string) => api.post<{ user: User }>('/auth/verify-email', { code }),
     onSuccess: (data) => queryClient.setQueryData(['me'], data.user),
@@ -102,6 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout: async () => {
         await logoutMutation.mutateAsync();
       },
+      deleteAccount: async (password) => {
+        await deleteAccountMutation.mutateAsync(password);
+      },
       verifyEmail: async (code) => {
         await verifyEmailMutation.mutateAsync(code);
       },
@@ -121,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginMutation,
       registerMutation,
       logoutMutation,
+      deleteAccountMutation,
       verifyEmailMutation,
       resendVerificationMutation,
       addEmailMutation,
