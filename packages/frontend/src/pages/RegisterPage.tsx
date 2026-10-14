@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { ApiError } from '../api/client';
 import { Turnstile, useTurnstileSiteKey } from '../components/Turnstile';
@@ -7,7 +7,6 @@ import styles from './Form.module.scss';
 
 export function RegisterPage() {
   const { user, register } = useAuth();
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
@@ -19,6 +18,7 @@ export function RegisterPage() {
   const [turnstileReset, setTurnstileReset] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
 
   const turnstileSiteKey = useTurnstileSiteKey();
   const captchaPending = Boolean(turnstileSiteKey) && !turnstileToken;
@@ -31,13 +31,25 @@ export function RegisterPage() {
     setSubmitting(true);
     try {
       await register(email, password, displayName, { company, turnstileToken: turnstileToken ?? undefined });
-      navigate('/profile');
+      setDone(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Registration failed');
       setTurnstileReset((n) => n + 1);
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (done) {
+    return (
+      <div className={styles.form}>
+        <h1>Check your email</h1>
+        <p>
+          If that address can receive mail, we&apos;ve sent you a message with a verification code.{' '}
+          <Link to="/login">Log in</Link> with the password you just chose to finish verifying.
+        </p>
+      </div>
+    );
   }
 
   return (

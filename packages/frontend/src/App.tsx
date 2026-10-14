@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { Cabinet } from './components/Cabinet';
 import { AdminPage } from './pages/AdminPage';
@@ -12,8 +12,11 @@ import { RegisterPage } from './pages/RegisterPage';
 
 function RequireAuth({ children }: { children: ReactElement }) {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
   if (isLoading) return null;
-  if (!user) return <Navigate to="/login" replace />;
+  // Remember where they were headed (e.g. /profile?verify=CODE from the
+  // verification email) so logging in lands them back there.
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   return children;
 }
 
