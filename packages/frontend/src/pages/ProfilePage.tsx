@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import styles from './Form.module.scss';
 
 export function ProfilePage() {
-  const { user, addEmail, verifyEmail, resendVerification, setSubscribed } = useAuth();
+  const { user, addEmail, verifyEmail, resendVerification, setSubscribed, deleteAccount } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState(() => searchParams.get('verify') ?? '');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
   const autoVerifyAttempted = useRef(false);
 
   // The verification email's "Verify email" button links straight to
@@ -88,6 +91,19 @@ export function ProfilePage() {
     }
   }
 
+  async function handleDeleteAccount(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      await deleteAccount(deletePassword);
+      navigate('/', { replace: true });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not delete account');
+      setSubmitting(false);
+    }
+  }
+
   async function handleSubscribeToggle(e: ChangeEvent<HTMLInputElement>) {
     setError(null);
     try {
@@ -161,6 +177,44 @@ export function ProfilePage() {
         <input type="checkbox" checked={user.subscribed} onChange={(e) => void handleSubscribeToggle(e)} />
         Subscribe to updates
       </label>
+
+      <hr />
+      <h2>Delete account</h2>
+      {confirmingDelete ? (
+        <form onSubmit={(e) => void handleDeleteAccount(e)}>
+          <p className={styles.error}>
+            This permanently deletes your account and all of your scores. It can&apos;t be undone.
+          </p>
+          <label>
+            Enter your password to confirm
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              autoComplete="current-password"
+              maxLength={200}
+              required
+            />
+          </label>
+          <button type="submit" className={styles.submit} disabled={submitting}>
+            {submitting ? 'Deleting…' : 'Permanently delete my account'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setConfirmingDelete(false);
+              setDeletePassword('');
+              setError(null);
+            }}
+          >
+            Cancel
+          </button>
+        </form>
+      ) : (
+        <button type="button" onClick={() => setConfirmingDelete(true)}>
+          Delete my account and scores
+        </button>
+      )}
     </div>
   );
 }
